@@ -1,0 +1,200 @@
+.template2-report-card {
+  max-width: 1150px;
+  margin: 10px auto;
+  padding: 12px 20px;
+  background: #fff;
+  border: 2px solid #8f72a1;
+  font-family: Arial, sans-serif;
+  color: #000;
+  font-size: 10.5px;
+}
+
+/* HEADER */
+.school-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 900;
+  color: #5b3783;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #7a57bc;
+  margin-bottom: 8px;
+  font-family: "Georgia", serif;
+}
+
+.student-info-row {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #374151;
+}
+.student-info-row span {
+  border-bottom: 1px dotted #7a57bc;
+  padding-bottom: 1px;
+}
+.student-info-row span b {
+  margin-left: 5px;
+  color: #5b3783;
+  font-weight: 700;
+}
+
+/* TABLE BASE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+th, td {
+  border: 1px solid #222;
+  text-align: center;
+  padding: 2px 3px;
+  vertical-align: middle;
+}
+.term-header.term1 {
+  background: #ebe2fb;
+}
+.term-header.term2 {
+  background: #e7f0ff;
+}
+.subject-head {
+  background: #f2edf9;
+  font-weight: bold;
+}
+.overall-head {
+  background: #efeaf9;
+  font-weight: bold;
+}
+.subject-name {
+  text-align: left;
+  font-weight: 600;
+  padding-left: 4px;
+}
+
+/* CO-SCHOLASTIC */
+.coscholastic-table {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+.coscholastic-table th {
+  background: #ece7f6;
+  font-weight: bold;
+  padding: 3px;
+}
+.coscholastic-table td {
+  text-align: left;
+  padding: 3px 5px;
+  font-size: 10px;
+}
+
+/* DISCIPLINE + REMARKS */
+.bottom-section {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.discipline-table {
+  flex: 0 0 46%;
+}
+.discipline-table th {
+  background: #f5f2fb;
+  font-weight: bold;
+}
+.discipline-table td, .discipline-table th {
+  font-size: 9.5px;
+  padding: 2px 4px;
+}
+
+/* REMARKS BOXES */
+.remarks-box-group {
+  flex: 1;
+  font-size: 9.8px;
+}
+.remarks-box-group div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dotted #555;
+  margin-top: 3px;
+  padding-bottom: 2px;
+}
+.remarks-box-group span:first-child {
+  font-weight: 500;
+}
+.line {
+  flex: 1;
+  border-bottom: 1px solid #999;
+  margin-left: 5px;
+}
+.short {
+  width: 60px;
+}
+
+/* SIGNATURE SECTION */
+.signature-fields {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 10px;
+  border-top: 1px solid #000;
+  padding-top: 5px;
+  font-weight: 600;
+  font-size: 10.5px;
+  text-align: center;
+}
+.signature-fields > div {
+  flex: 1;
+}
+
+/* PRINT LAYOUT */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .template2-report-card {
+    border: none;
+    padding: 0;
+    margin: 0;
+    font-size: 10px;
+  }
+  .signature-fields {
+    page-break-inside: avoid;
+  }
+}
+
+/* SCHOLASTIC TABLE ADJUSTMENTS */
+.scholastic-table2 th,
+.scholastic-table2 td {
+  border: 1px solid #222;
+  text-align: center;
+  padding: 2px 3px;
+  vertical-align: middle;
+}
+
+.scholastic-table2 .total-row {
+  font-weight: bold;
+  background: #f2f2f2;
+}
+
+.scholastic-table2 .overall-head {
+  background: #efeaf9;
+  font-weight: bold;
+}
+
+.scholastic-table2 td.subject-name {
+  text-align: left;
+  font-weight: 600;
+  padding-left: 4px;
+}
+
+/* Remove vertical borders for Optional subject row */
+.scholastic-table2 td.subject-name[colspan="1"]:contains("Optional") {
+  border-left: none;
+  border-right: none;
+}
