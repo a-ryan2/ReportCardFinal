@@ -26,24 +26,25 @@ public class StudentService {
 
     public Student save(Student student) {
         // Validate mandatory fields
-        if (student.getSrn() == null || student.getSrn().trim().isEmpty() ||
-                student.getAdmissionNo() == null || student.getAdmissionNo().trim().isEmpty() ||
-                student.getFirstName() == null || student.getLastName() == null ||
+        if (student.getAdmissionNo() == null || student.getAdmissionNo().trim().isEmpty() ||
+                student.getFirstName() == null || student.getFirstName().trim().isEmpty() ||
                 student.getMotherName() == null || student.getFatherName() == null ||
                 student.getRollNumber() == null) {
-            throw new IllegalArgumentException("All fields are mandatory.");
+            throw new IllegalArgumentException("Mandatory fields are missing.");
         }
 
-        // Check duplicates
-        boolean srnExists = studentRepository.existsBySrn(student.getSrn());
+        // ✅ Only check SRN uniqueness if provided
+        if (student.getSrn() != null && !student.getSrn().trim().isEmpty()) {
+            boolean srnExists = studentRepository.existsBySrn(student.getSrn());
+            if (srnExists && (student.getId() == null ||
+                    !studentRepository.findById(student.getId())
+                            .map(s -> s.getSrn() != null && s.getSrn().equals(student.getSrn()))
+                            .orElse(false))) {
+                throw new IllegalArgumentException("SRN already exists.");
+            }
+        }
+
         boolean admissionExists = studentRepository.existsByAdmissionNo(student.getAdmissionNo());
-
-        if (srnExists && (student.getId() == null ||
-                !studentRepository.findById(student.getId())
-                        .map(s -> s.getSrn().equals(student.getSrn()))
-                        .orElse(false))) {
-            throw new IllegalArgumentException("SRN already exists.");
-        }
 
         if (admissionExists && (student.getId() == null ||
                 !studentRepository.findById(student.getId())

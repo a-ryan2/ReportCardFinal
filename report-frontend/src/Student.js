@@ -102,10 +102,8 @@ export default function Student() {
 
   const validateForm = () => {
     const {
-      srn,
       admissionNo,
       firstName,
-      lastName,
       rollNumber,
       motherName,
       fatherName,
@@ -113,16 +111,14 @@ export default function Student() {
     } = formData;
 
     if (
-      !srn.trim() ||
       !admissionNo.trim() ||
       !firstName.trim() ||
-      !lastName.trim() ||
       !rollNumber.trim() ||
       !motherName.trim() ||
       !fatherName.trim() ||
       !dateOfBirth
     ) {
-      alert('All fields are required. Please fill in all details.');
+      alert('All required fields must be filled.');
       return false;
     }
 
@@ -195,63 +191,21 @@ export default function Student() {
       {/* Add/Edit Form */}
       {showForm && (
         <div className="form-container">
-          <input name="srn" placeholder="SRN *" value={formData.srn} onChange={handleChange} />
-          <input
-            name="admissionNo"
-            placeholder="Admission No *"
-            value={formData.admissionNo}
-            onChange={handleChange}
-          />
-          <input
-            name="firstName"
-            placeholder="First Name *"
-            value={formData.firstName}
-            onChange={handleChange}
-          />
-          <input
-            name="lastName"
-            placeholder="Last Name *"
-            value={formData.lastName}
-            onChange={handleChange}
-          />
-          <input
-            name="rollNumber"
-            placeholder="Roll Number *"
-            value={formData.rollNumber}
-            onChange={handleChange}
-          />
-          <input
-            name="motherName"
-            placeholder="Mother Name *"
-            value={formData.motherName}
-            onChange={handleChange}
-          />
-          <input
-            name="fatherName"
-            placeholder="Father Name *"
-            value={formData.fatherName}
-            onChange={handleChange}
-          />
+          <input name="srn" placeholder="SRN" value={formData.srn} onChange={handleChange} />
+          <input name="admissionNo" placeholder="Admission No *" value={formData.admissionNo} onChange={handleChange} />
+          <input name="firstName" placeholder="First Name *" value={formData.firstName} onChange={handleChange} />
+          <input name="lastName" placeholder="Last Name" value={formData.lastName} onChange={handleChange} />
+          <input name="rollNumber" placeholder="Roll Number *" value={formData.rollNumber} onChange={handleChange} />
+          <input name="motherName" placeholder="Mother Name *" value={formData.motherName} onChange={handleChange} />
+          <input name="fatherName" placeholder="Father Name *" value={formData.fatherName} onChange={handleChange} />
 
-          {/* ✅ Stream Dropdown (only for Class 11 & 12) */}
           {shouldShowStream && (
-            <Dropdown
-              label="Stream"
-              options={streams}
-              value={streamId}
-              onChange={setStreamId}
-            />
+            <Dropdown label="Stream" options={streams} value={streamId} onChange={setStreamId} />
           )}
 
           <label style={{ marginTop: '5px' }}>
             Date of Birth *
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              style={{ marginLeft: '10px' }}
-            />
+            <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} style={{ marginLeft: '10px' }} />
           </label>
 
           <div style={{ marginTop: '10px' }}>
@@ -296,21 +250,18 @@ export default function Student() {
               <tbody>
                 {students.map((s) => (
                   <tr key={s.id}>
-                    <td>{s.srn}</td>
+                    <td>{s.srn || '-'}</td>
                     <td>{s.admissionNo}</td>
                     <td>{s.rollNumber}</td>
                     <td>{s.firstName}</td>
-                    <td>{s.lastName}</td>
+                    <td>{s.lastName || '-'}</td>
                     <td>{s.motherName}</td>
                     <td>{s.fatherName}</td>
                     <td>{s.dateOfBirth || '-'}</td>
                     <td>{s.stream ? s.stream.name : '-'}</td>
                     <td>
                       <button onClick={() => handleEdit(s)}>Edit</button>
-                      <button
-                        onClick={() => handleDelete(s.id)}
-                        style={{ marginLeft: '5px', background: 'red' }}
-                      >
+                      <button onClick={() => handleDelete(s.id)} style={{ marginLeft: '5px', background: 'red' }}>
                         Delete
                       </button>
                     </td>
