@@ -182,10 +182,16 @@ export default function Student() {
     <div className="container">
       <h2>Students</h2>
 
-      {/* Class & Section Dropdowns */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+      {/* Class & Section Dropdowns + Student Count */}
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '15px', alignItems: 'center' }}>
         <Dropdown label="Class" options={classes} value={classId} onChange={setClassId} />
         <Dropdown label="Section" options={sections} value={sectionId} onChange={setSectionId} />
+
+        {classId && sectionId && !loading && (
+          <div style={{ fontWeight: 'bold' }}>
+            Total Students: {students.length}
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Form */}
