@@ -48,6 +48,12 @@ public class ClassAdminController {
         return ResponseEntity.ok(classAdminService.findById(id));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ClassAdmin>> getByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(classAdminService.findByUserId(userId));
+    }
+
+
     // Update
     @PutMapping("/{id}")
     public ResponseEntity<ClassAdmin> update(@PathVariable Long id, @RequestBody AssignRequest request) {

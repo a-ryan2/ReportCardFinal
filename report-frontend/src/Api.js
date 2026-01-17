@@ -255,7 +255,18 @@ export async function fetchClassAdminById(id) {
     return res.data;
   } catch (error) {
     console.error(`Error fetching class admin ${id}:`, error);
-    return null;
+    return [];
+  }
+}
+
+// Fetch class-admin by User ID
+export async function fetchClassAdminByUserId(id) {
+  try {
+    const res = await axios.get(`${API_BASE}/class-admin/user/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error(`Error fetching class admin ${id}:`, error);
+    return [];;
   }
 }
 

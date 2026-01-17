@@ -33,6 +33,10 @@ public class ClassAdminService {
                 .orElseThrow(() -> new RuntimeException("ClassAdmin not found with id: " + id));
     }
 
+    public List<ClassAdmin> findByUserId(Long userId) {
+        return classAdminRepository.findByUserId(userId);
+    }
+
     public ClassAdmin update(ClassAdmin classAdmin) {
         return classAdminRepository.save(classAdmin);
     }

@@ -42,6 +42,10 @@ public class Mark {
     @Column(nullable = false)
     private Integer marksObtained;
 
+    // ✅ NEW FIELD
+    @Column(nullable = false)
+    private Boolean absent = false;
+
     // Example: "2025-26" or "2025"
     @Column(nullable = false, length = 20)
     private String academicYear;

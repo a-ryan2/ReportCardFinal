@@ -38,6 +38,7 @@ public class AuthController {
         if (passwordEncoder.matches(password, user.getPassword())) {
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Login successful");
+            response.put("id", user.getId());
             response.put("username", user.getUsername());
             response.put("role", user.getRole());
             return ResponseEntity.ok(response);

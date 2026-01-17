@@ -6,7 +6,7 @@ import {
   fetchAttendance,
   saveAttendance,
   fetchHolidays,
-  fetchClassAdmins
+  fetchClassAdminByUserId
 } from './Api';
 import Dropdown from './Dropdown';
 import './style.css';
@@ -37,7 +37,7 @@ export default function Attendance() {
     fetchSections().then(setSections);
 
     if (role === 'ADMIN') {
-      fetchClassAdmins(currentUser.id).then(data => {
+      fetchClassAdminByUserId(currentUser.id).then(data => {
         setAssignedClasses(
           data.map(a => ({ classId: a.classEntity.id, sectionId: a.section.id }))
         );

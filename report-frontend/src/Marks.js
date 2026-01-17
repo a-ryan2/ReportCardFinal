@@ -9,7 +9,7 @@ import {
   fetchStudents,
   fetchMarksByStudent,
   saveMark,
-  fetchClassAdmins,
+  fetchClassAdminByUserId,
   generateReportCardForClassSection
 } from './Api';
 import './style.css';
@@ -33,6 +33,9 @@ export default function Marks() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // ✅ Shared total marks for all students
+  const [sharedTotalMarks, setSharedTotalMarks] = useState('');
+
   const currentUser = JSON.parse(localStorage.getItem('currentUser')) || {};
   const role = currentUser.role?.name ? currentUser.role.name.toUpperCase() : '';
 
@@ -46,7 +49,7 @@ export default function Marks() {
 
     // Fetch assigned classes if role is ADMIN
     if (role === 'ADMIN') {
-      fetchClassAdmins(currentUser.id).then(data => {
+      fetchClassAdminByUserId(currentUser.id).then(data => {
         setAssignedClasses(
           data.map(a => ({
             classId: a.classEntity.id,
@@ -62,7 +65,10 @@ export default function Marks() {
     if (classId && sectionId) {
       setLoading(true);
       fetchStudents(classId, sectionId)
-        .then(setStudents)
+        .then(data => {
+          const sorted = [...data].sort((a, b) => a.rollNumber - b.rollNumber);
+          setStudents(sorted);
+        })
         .finally(() => setLoading(false));
     } else {
       setStudents([]);
@@ -71,16 +77,17 @@ export default function Marks() {
 
   // Reset marks if subject, exam type, or term is cleared
   useEffect(() => {
-    if (!subjectId || !examTypeId || !termId) {
-      setMarks({});
-      setErrors({});
-    }
+    setMarks({});
+    setErrors({});
+    setSharedTotalMarks('');
   }, [subjectId, examTypeId, termId]);
 
   // Load marks for selected students
   useEffect(() => {
     async function loadMarks() {
       const marksData = {};
+      let detectedTotal = '';
+
       for (const student of students) {
         const ms = await fetchMarksByStudent(student.id);
         ms.forEach(m => {
@@ -92,10 +99,17 @@ export default function Marks() {
             m.sectionId === parseInt(sectionId)
           ) {
             marksData[student.id] = m;
+            if (detectedTotal === '' && m.totalMarks !== undefined) {
+              detectedTotal = m.totalMarks;
+            }
           }
         });
       }
+
       setMarks(marksData);
+      if (detectedTotal !== '') {
+        setSharedTotalMarks(detectedTotal);
+      }
     }
 
     if (students.length > 0 && subjectId && examTypeId && termId && classId && sectionId) {
@@ -117,10 +131,39 @@ export default function Marks() {
     return false;
   })();
 
-  function handleMarkChange(studentId, field, value) {
-    if (!editable) return; // Prevent editing if not allowed
+  function handleSharedTotalMarksChange(value) {
+    if (!editable) return;
 
-    // Ensure only >= 0 and keep zero
+    const sanitized = value === '' ? '' : Math.max(0, Number(value));
+    setSharedTotalMarks(sanitized);
+
+    setMarks(prev => {
+      const updated = { ...prev };
+      students.forEach(student => {
+        const existing = updated[student.id] || {
+          student: { id: student.id },
+          subject: { id: parseInt(subjectId) },
+          examType: { id: parseInt(examTypeId) },
+          term: { id: parseInt(termId) },
+          classId: parseInt(classId),
+          sectionId: parseInt(sectionId),
+          marksObtained: '',
+          absent: false,
+          academicYear: new Date().getFullYear().toString()
+        };
+
+        updated[student.id] = {
+          ...existing,
+          totalMarks: sanitized
+        };
+      });
+      return updated;
+    });
+  }
+
+  function handleMarkChange(studentId, field, value) {
+    if (!editable) return;
+
     const sanitized = value === '' ? '' : Math.max(0, Number(value));
 
     setMarks(prev => {
@@ -131,8 +174,9 @@ export default function Marks() {
         term: { id: parseInt(termId) },
         classId: parseInt(classId),
         sectionId: parseInt(sectionId),
-        totalMarks: '',
+        totalMarks: sharedTotalMarks,
         marksObtained: '',
+        absent: false,
         academicYear: new Date().getFullYear().toString()
       };
       const updated = { ...existing, [field]: sanitized };
@@ -140,6 +184,33 @@ export default function Marks() {
     });
 
     setErrors(prev => ({ ...prev, [studentId]: null }));
+  }
+
+  function handleAbsentToggle(studentId, checked) {
+    if (!editable) return;
+
+    setMarks(prev => {
+      const existing = prev[studentId] || {
+        student: { id: studentId },
+        subject: { id: parseInt(subjectId) },
+        examType: { id: parseInt(examTypeId) },
+        term: { id: parseInt(termId) },
+        classId: parseInt(classId),
+        sectionId: parseInt(sectionId),
+        totalMarks: sharedTotalMarks,
+        marksObtained: '',
+        academicYear: new Date().getFullYear().toString()
+      };
+
+      return {
+        ...prev,
+        [studentId]: {
+          ...existing,
+          absent: checked,
+          marksObtained: checked ? 0 : existing.marksObtained
+        }
+      };
+    });
   }
 
   async function saveAll() {
@@ -159,10 +230,12 @@ export default function Marks() {
       const total = m.totalMarks;
       const obtained = m.marksObtained;
 
-      if ((total !== '' && obtained === '') || (total === '' && obtained !== '')) {
-        newErrors[studentId] = 'Both Total Marks and Marks Obtained are required';
-      } else if (total !== '' && obtained !== '' && parseInt(obtained) > parseInt(total)) {
-        newErrors[studentId] = 'Marks Obtained cannot exceed Total Marks';
+      if (!m.absent) {
+        if ((total !== '' && obtained === '') || (total === '' && obtained !== '')) {
+          newErrors[studentId] = 'Both Total Marks and Marks Obtained are required';
+        } else if (total !== '' && obtained !== '' && parseInt(obtained) > parseInt(total)) {
+          newErrors[studentId] = 'Marks Obtained cannot exceed Total Marks';
+        }
       }
     }
 
@@ -173,7 +246,6 @@ export default function Marks() {
 
     await Promise.all(Object.values(marks).map(m => saveMark(m)));
 
-    // After saving marks, generate/update record in report_card table for rank in class.
     await generateReportCardForClassSection(classId, sectionId, students);
 
     alert('Marks saved successfully!');
@@ -191,6 +263,26 @@ export default function Marks() {
         <Dropdown label="Exam Type" options={examTypes} value={examTypeId} onChange={setExamTypeId} />
         <Dropdown label="Term" options={terms} value={termId} onChange={setTermId} />
 
+        {!editable && classId && sectionId && role === 'ADMIN' && (
+          <p style={{ color: 'red', marginTop: '10px' }}>
+            You are not assigned to this class and section.
+          </p>
+        )}
+
+        {students.length > 0 && (
+          <div style={{ marginTop: '10px' }}>
+            <label>Total Marks (for all students): </label>
+            <input
+              type="number"
+              value={sharedTotalMarks}
+              onChange={e => handleSharedTotalMarksChange(e.target.value)}
+              min="0"
+              disabled={!editable}
+              style={{ width: '100px', marginLeft: '10px', textAlign: 'center' }}
+            />
+          </div>
+        )}
+
         {loading ? (
           <p>Loading students...</p>
         ) : (
@@ -200,6 +292,7 @@ export default function Marks() {
                 <th>Student</th>
                 <th>Total Marks</th>
                 <th>Marks Obtained</th>
+                <th>Absent</th>
               </tr>
             </thead>
             <tbody>
@@ -212,17 +305,7 @@ export default function Marks() {
                       <tr className={error ? 'error-row' : ''}>
                         <td>{student.firstName + ' ' + student.lastName}</td>
                         <td>
-                          <input
-                            type="number"
-                            value={mark.totalMarks ?? ''}
-                            onChange={e =>
-                              handleMarkChange(student.id, 'totalMarks', e.target.value)
-                            }
-                            className="input-field small-input"
-                            min="0"
-                            style={{ width: '80px', textAlign: 'center' }}
-                            disabled={!editable}
-                          />
+                          <span>{mark.totalMarks ?? ''}</span>
                         </td>
                         <td>
                           <input
@@ -234,13 +317,21 @@ export default function Marks() {
                             className="input-field small-input"
                             min="0"
                             style={{ width: '80px', textAlign: 'center' }}
+                            disabled={!editable || mark.absent}
+                          />
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <input
+                            type="checkbox"
+                            checked={mark.absent || false}
+                            onChange={e => handleAbsentToggle(student.id, e.target.checked)}
                             disabled={!editable}
                           />
                         </td>
                       </tr>
                       {error && (
                         <tr>
-                          <td colSpan="3" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
+                          <td colSpan="4" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
                             {error}
                           </td>
                         </tr>
@@ -250,7 +341,7 @@ export default function Marks() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="3" style={{ textAlign: 'center' }}>
+                  <td colSpan="4" style={{ textAlign: 'center' }}>
                     No students to display
                   </td>
                 </tr>

@@ -15,4 +15,7 @@ public interface ClassAdminRepository extends JpaRepository<ClassAdmin, Long> {
     List<ClassAdmin> findByUser(User user);
 
     Optional<ClassAdmin> findByUserAndClassEntityAndSection(User user, ClassEntity classEntity, Section section);
+
+    List<ClassAdmin> findByUserId(Long userId);
+
 }

@@ -7,7 +7,7 @@ import {
   fetchTerms,
   fetchCoScholasticMarksByStudentTerm,
   saveCoScholasticMarks,
-  fetchClassAdmins
+  fetchClassAdminByUserId
 } from './Api';
 import './style.css';
 
@@ -36,7 +36,7 @@ export default function CoScholasticGrades() {
     fetchTerms().then(setTerms);
 
     if (role === 'ADMIN') {
-      fetchClassAdmins(currentUser.id).then(data => {
+      fetchClassAdminByUserId(currentUser.id).then(data => {
         setAssignedClasses(
           data.map(a => ({
             classId: a.classEntity.id,

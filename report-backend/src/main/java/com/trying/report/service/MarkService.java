@@ -44,6 +44,7 @@ public class MarkService {
             Mark existingMark = existing.get();
             existingMark.setTotalMarks(mark.getTotalMarks());
             existingMark.setMarksObtained(mark.getMarksObtained());
+            existingMark.setAbsent(mark.getAbsent()); // ✅ NEW
             return markRepository.save(existingMark);
         } else {
             return markRepository.save(mark);
