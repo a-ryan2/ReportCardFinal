@@ -426,7 +426,7 @@ export async function fetchMarksByStudentForReportCard(studentId) {
           subjectMap[subjectName].noteBookT1 = scaleMarks(marksObtained, totalMarks, 5);
         } else if (examType.includes("SUB ENRICHMENT")) {
           subjectMap[subjectName].subEnrichmentT1 = scaleMarks(marksObtained, totalMarks, 5);
-        } else if (examType.includes("TERM")) {
+        } else if (examType.includes("Half Yearly / Annual")) {
           subjectMap[subjectName].term1Marks = scaleMarks(marksObtained, totalMarks, 30);
         }
       } else if (termNumber === "2") {
@@ -436,7 +436,7 @@ export async function fetchMarksByStudentForReportCard(studentId) {
           subjectMap[subjectName].noteBookT2 = scaleMarks(marksObtained, totalMarks, 5);
         } else if (examType.includes("SUB ENRICHMENT")) {
           subjectMap[subjectName].subEnrichmentT2 = scaleMarks(marksObtained, totalMarks, 5);
-        } else if (examType.includes("TERM")) {
+        } else if (examType.includes("Half Yearly / Annual")) {
           subjectMap[subjectName].term2Marks = scaleMarks(marksObtained, totalMarks, 30);
         }
       }
@@ -508,7 +508,7 @@ export async function generateReportCardForClassSection(classId, sectionId, stud
         if (examType.includes('PT')) scaled = calculateScaled(obt, max, 10);
         else if (examType.includes('NOTEBOOK')) scaled = calculateScaled(obt, max, 5);
         else if (examType.includes('SUB ENRICHMENT')) scaled = calculateScaled(obt, max, 5);
-        else if (examType.includes('TERM')) scaled = calculateScaled(obt, max, 30);
+        else if (examType.includes('Half Yearly / Annual')) scaled = calculateScaled(obt, max, 30);
 
         if (termNum === '1') term1Obt += scaled;
         else term2Obt += scaled;

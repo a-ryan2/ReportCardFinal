@@ -60,6 +60,36 @@ export default function Marks() {
     }
   }, [role, currentUser.id]);
 
+
+const selectedExamType = examTypes.find(
+  e => e.id === parseInt(examTypeId)
+);
+
+const isPreboard =
+  selectedExamType?.name === 'Pre Board 1' ||
+  selectedExamType?.name === 'Pre Board 2';
+
+
+
+useEffect(() => {
+  if (!examTypeId) {
+    setTermId('');
+    return;
+  }
+
+  if (isPreboard) {
+    const term2 = terms.find(t => t.name === 'Term-2');
+    if (term2) {
+      setTermId(term2.id.toString());
+    }
+  } else {
+    // 🔹 CLEAR term when exam type changes away from preboard
+    setTermId('');
+  }
+}, [examTypeId, isPreboard, terms]);
+
+
+
   // Fetch students based on class and section
   useEffect(() => {
     if (classId && sectionId) {
@@ -261,7 +291,7 @@ export default function Marks() {
         <Dropdown label="Section" options={sections} value={sectionId} onChange={setSectionId} />
         <Dropdown label="Subject" options={subjects} value={subjectId} onChange={setSubjectId} />
         <Dropdown label="Exam Type" options={examTypes} value={examTypeId} onChange={setExamTypeId} />
-        <Dropdown label="Term" options={terms} value={termId} onChange={setTermId} />
+        <Dropdown label="Term" options={terms} value={termId} onChange={setTermId} disabled={isPreboard} />
 
         {!editable && classId && sectionId && role === 'ADMIN' && (
           <p style={{ color: 'red', marginTop: '10px' }}>
