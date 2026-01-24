@@ -107,6 +107,10 @@ export default function CoScholasticGrades() {
         artEducation: '',
         workEducation: '',
         healthPhysicalEducation: '',
+        moralScience: '',
+        gk: '',
+        computer: '',
+        drawing: '',
       };
       return { ...prev, [studentId]: { ...existing, [field]: value } };
     });
@@ -170,6 +174,10 @@ export default function CoScholasticGrades() {
                   <th>Art Education</th>
                   <th>Work Education</th>
                   <th>Health & Physical Education</th>
+                  <th>Moral Science</th>
+                  <th>GK</th>
+                  <th>Computer</th>
+                  <th>Drawing</th>
                 </tr>
               </thead>
               <tbody>
@@ -191,7 +199,11 @@ export default function CoScholasticGrades() {
                             'classTeacherRemarks',
                             'artEducation',
                             'workEducation',
-                            'healthPhysicalEducation'
+                            'healthPhysicalEducation',
+                            'moralScience',
+                            'gk',
+                            'computer',
+                            'drawing',
                           ].map(field => (
                             <td key={field}>
                               <input
@@ -208,7 +220,7 @@ export default function CoScholasticGrades() {
                         </tr>
                         {error && (
                           <tr>
-                            <td colSpan="11" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
+                            <td colSpan="15" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
                               {error}
                             </td>
                           </tr>
@@ -218,7 +230,7 @@ export default function CoScholasticGrades() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="11" style={{ textAlign: 'center' }}>
+                    <td colSpan="15" style={{ textAlign: 'center' }}>
                       No students to display
                     </td>
                   </tr>
