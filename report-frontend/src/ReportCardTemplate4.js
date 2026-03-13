@@ -1,8 +1,8 @@
 import React from "react";
 import AryaVidyaMandirLogo from "./AryaVidyaMandirLogo.png";
-import "./Template3.css";
+import "./Template4.css";
 
-function ReportCardTemplate3({
+function ReportCardTemplate4({
   student,
   marks,
   totalPercentage,
@@ -37,8 +37,8 @@ const getStudentStream = (student) => {
   // subject sets
   const getCoreSubjectsForStream = () => {
 
-    if (classNo === 10) {
-      return ["ENGLISH","HINDI","MATHEMATICS","SCIENCE","SST"];
+    if (classNo === 9) {
+        return ["ENGLISH","HINDI","MATHEMATICS","SCIENCE","SST"];
     }
 
     if (stream === "NON-MEDICAL") {
@@ -53,10 +53,9 @@ const getStudentStream = (student) => {
 
   const getOptionalSubjectsForStream = () => {
 
-  if (classNo === 10) {
-    return ["COMPUTER"];
+  if (classNo === 9) {
+      return ["COMPUTER"];
   }
-
   if (stream === "NON-MEDICAL") {
     return ["PHY. EDU.", "COMP. SCIENCE"];
   }
@@ -102,15 +101,14 @@ const getStudentStream = (student) => {
         <td>{m.pt1Actual || ""}</td>
         <td>{m.pt2Actual || ""}</td>
         <td>{m.halfYearlyActual || ""}</td>
-        <td>{m.preBoard1Actual || ""}</td>
-        <td>{m.preBoard2Actual || ""}</td>
+        <td>{m.annualExamActual || ""}</td>
         <td>{m.practicalProjectAslActual || ""}</td>
 
         {/* Converted marks (only 4) */}
         <td>{m.convPt1 || ""}</td>
         <td>{m.convPt2 || ""}</td>
         <td>{m.convHalfYearly || ""}</td>
-        <td>{m.convPreboardBest || ""}</td>
+        <td>{m.convAnnualExam || ""}</td>
 
         {/* Final breakup on far right */}
         <td>{m.convTheory || ""}</td>
@@ -137,6 +135,7 @@ const getStudentStream = (student) => {
       <div className="school-subtitle">
         Academic Performance Report – {student?.classEntity?.name}
         {stream && ` (${stream.split("_").join(" ")} Stream)`}
+
       </div>
 
       {/* STUDENT INFO */}
@@ -183,7 +182,7 @@ const getStudentStream = (student) => {
               </th>
 
               {/* Actual Marks block */}
-              <th colSpan="6" className="main-title">
+              <th colSpan="5" className="main-title">
                 Actual Marks
               </th>
 
@@ -208,21 +207,19 @@ const getStudentStream = (student) => {
               <th>PT-I</th>
               <th>PT-II</th>
               <th>Half Yearly Exam</th>
-              <th>Pre Board-1</th>
-              <th>Pre Board-2</th>
+              <th>Annual Exam</th>
               <th>Project / Practical / ASL</th>
 
               {/* Converted columns */}
               <th>PT-I</th>
               <th>PT-II</th>
               <th>Half Yearly Exam</th>
-              <th>Best of PB-1 &amp; PB-2</th>
+              <th>Annual Exam</th>
             </tr>
             <tr>
               {/* Maximum marks row */}
               <th>30</th>
               <th>30</th>
-              <th>70 / 80</th>
               <th>70 / 80</th>
               <th>70 / 80</th>
               <th>30 / 20</th>
@@ -254,7 +251,7 @@ const getStudentStream = (student) => {
             {/* GRAND TOTAL */}
             <tr className="total-row">
               <td className="subject-name">Grand Total</td>
-              <td colSpan="12"></td>
+              <td colSpan="11"></td>
               <td>{grandTotal || ""}</td>
             </tr>
           </tbody>
@@ -321,4 +318,4 @@ const getStudentStream = (student) => {
   );
 }
 
-export default ReportCardTemplate3;
+export default ReportCardTemplate4;

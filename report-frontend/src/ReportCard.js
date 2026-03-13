@@ -14,6 +14,7 @@ import {
 import ReportCardTemplate1 from './ReportCardTemplate1';
 import ReportCardTemplate2 from './ReportCardTemplate2';
 import ReportCardTemplate3 from './ReportCardTemplate3';
+import ReportCardTemplate4 from './ReportCardTemplate4';
 import './style.css';
 import './Template1.css';
 
@@ -200,7 +201,8 @@ const generateReport = async () => {
   const getTemplate = () => {
     if (classNumber >= 1 && classNumber <= 4) return 'template1';
     if (classNumber >= 5 && classNumber <= 8) return 'template2';
-    if (classNumber >= 9 && classNumber <= 12) return 'template3';
+    if (classNumber == 10 || classNumber == 12) return 'template3';
+    if (classNumber == 9 || classNumber == 11) return 'template4';
     return 'templateDefault';
   };
 
@@ -241,6 +243,7 @@ const generateReport = async () => {
             {getTemplate() === 'template1' && <ReportCardTemplate1 {...templateProps} />}
             {getTemplate() === 'template2' && <ReportCardTemplate2 {...templateProps} />}
             {getTemplate() === 'template3' && <ReportCardTemplate3 {...templateProps} />}
+            {getTemplate() === 'template4' && <ReportCardTemplate4 {...templateProps} />}
           </div>
 
           <div className="report-footer">

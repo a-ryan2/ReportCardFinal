@@ -13,10 +13,43 @@ function ReportCardTemplate2({
   const scholasticMarks = marks || [];
   const coMarks = coScholastic || [];
 
-  const getSubjectMarks = (subjectName) =>
-    scholasticMarks.find(
-      (m) => m.subjectName?.toUpperCase() === subjectName.toUpperCase()
-    ) || {};
+  const classNo = parseInt(student?.classEntity?.name);
+
+  const subjects =
+    classNo === 5
+      ? [
+          "ENGLISH",
+          "HINDI",
+          "MATHEMATICS",
+          "SCIENCE",
+          "SOCIAL SCIENCE",
+          "G.K",
+          "COMPUTER",
+          "MORAL SCIENCE"
+        ]
+      : [
+          "ENGLISH",
+          "HINDI",
+          "MATHEMATICS",
+          "SST",
+          "SCIENCE",
+          "SANSKRIT",
+          "Optional sub",
+          "COMPUTER"
+        ];
+
+     const getSubjectMarks = (subjectName) => {
+       const lookupName =
+         subjectName?.toUpperCase() === "SOCIAL SCIENCE"
+           ? "SST"
+           : subjectName?.toUpperCase();
+
+       return (
+         scholasticMarks.find(
+           (m) => m.subjectName?.toUpperCase() === lookupName
+         ) || {}
+       );
+     };
 
   const getCoScholasticGrade = (areaName, term) => {
     const mark = coMarks.find(
@@ -34,7 +67,7 @@ function ReportCardTemplate2({
     0
   );
   const overallMarksTotal = scholasticMarks.reduce(
-    (sum, m) => sum + (m.overallMarks || 0),
+    (sum, m) => sum + (m.total || 0),
     0
   );
 
@@ -46,7 +79,7 @@ function ReportCardTemplate2({
       <div className="student-info-grid">
         <div><span>Name:</span> <b>{student.firstName} {student.lastName}</b></div>
         <div><span>Roll No:</span> <b>{student.rollNumber}</b></div>
-        <div><span>Class:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
+        <div><span>Class & Section:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
         <div><span>SRN:</span> <b>{student.srn}</b></div>
         <div><span>Admission No:</span> <b>{student.admissionNo}</b></div>
         <div><span>Father Name:</span> <b>{student.fatherName}</b></div>
@@ -84,16 +117,7 @@ function ReportCardTemplate2({
             </tr>
           </thead>
           <tbody>
-            {[
-              "English",
-              "Hindi",
-              "Mathematics",
-              "S.St",
-              "Science",
-              "Sanskrit",
-              "Optional sub",
-              "Computer"
-            ].map((subject, i) => {
+            {subjects.map((subject, i) => {
               const subMarks = getSubjectMarks(subject);
               const isOptional = subject.toLowerCase().includes("optional");
               if (isOptional) {
@@ -109,16 +133,16 @@ function ReportCardTemplate2({
                   <td>{subMarks.pt1 || ""}</td>
                   <td>{subMarks.noteBookT1 || ""}</td>
                   <td>{subMarks.subEnrichmentT1 || ""}</td>
-                  <td>{subMarks.halfYearlyExam || ""}</td>
+                  <td>{subMarks.term1Marks || ""}</td>
                   <td>{subMarks.marksObtainedT1 || ""}</td>
                   <td>{subMarks.gradeT1 || ""}</td>
                   <td>{subMarks.pt2 || ""}</td>
                   <td>{subMarks.noteBookT2 || ""}</td>
                   <td>{subMarks.subEnrichmentT2 || ""}</td>
-                  <td>{subMarks.annualExam || ""}</td>
+                  <td>{subMarks.term2Marks || ""}</td>
                   <td>{subMarks.marksObtainedT2 || ""}</td>
                   <td>{subMarks.gradeT2 || ""}</td>
-                  <td>{subMarks.overallMarks || ""}</td>
+                  <td>{subMarks.total || ""}</td>
                   <td>{subMarks.overallGrade || ""}</td>
                 </tr>
               );

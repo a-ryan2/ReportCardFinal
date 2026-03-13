@@ -14,10 +14,18 @@ function ReportCardTemplate1({
   const scholasticMarks = marks || [];
   const coMarks = coScholastic || [];
 
-  const getSubjectMarks = (subjectName) =>
-    scholasticMarks.find(
-      (m) => m.subjectName?.toUpperCase() === subjectName.toUpperCase()
-    ) || {};
+     const getSubjectMarks = (subjectName) => {
+       const lookupName =
+         subjectName?.toUpperCase() === "SOCIAL SCIENCE"
+           ? "SST"
+           : subjectName?.toUpperCase();
+
+       return (
+         scholasticMarks.find(
+           (m) => m.subjectName?.toUpperCase() === lookupName
+         ) || {}
+       );
+     };
 
   const getCoScholasticGrade = (areaName, term) => {
     const mark = coMarks.find(
@@ -59,7 +67,7 @@ function ReportCardTemplate1({
       <div className="student-info-grid">
         <div><span>Name:</span> <b>{student.firstName} {student.lastName}</b></div>
         <div><span>Roll No:</span> <b>{student.rollNumber}</b></div>
-        <div><span>Class:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
+        <div><span>Class & Section:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
         <div><span>SRN:</span> <b>{student.srn}</b></div>
         <div><span>Admission No:</span> <b>{student.admissionNo}</b></div>
         <div><span>Father Name:</span> <b>{student.fatherName}</b></div>
