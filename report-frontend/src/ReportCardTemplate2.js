@@ -15,28 +15,38 @@ function ReportCardTemplate2({
 
   const classNo = parseInt(student?.classEntity?.name);
 
-  const subjects =
-    classNo === 5
-      ? [
-          "ENGLISH",
-          "HINDI",
-          "MATHEMATICS",
-          "SCIENCE",
-          "SOCIAL SCIENCE",
-          "G.K",
-          "COMPUTER",
-          "MORAL SCIENCE"
-        ]
-      : [
-          "ENGLISH",
-          "HINDI",
-          "MATHEMATICS",
-          "SST",
-          "SCIENCE",
-          "SANSKRIT",
-          "Optional sub",
-          "COMPUTER"
-        ];
+ const subjects =
+   classNo === 5
+     ? [
+         "ENGLISH",
+         "HINDI",
+         "MATHEMATICS",
+         "SCIENCE",
+         "SOCIAL SCIENCE",
+         "G.K",
+         "COMPUTER",
+         "MORAL SCIENCE"
+       ]
+     : classNo === 9
+     ? [
+         "ENGLISH",
+         "HINDI",
+         "MATHEMATICS",
+         "SST",
+         "SCIENCE",
+         "Optional sub",
+         "COMPUTER"
+       ]
+     : [
+         "ENGLISH",
+         "HINDI",
+         "MATHEMATICS",
+         "SST",
+         "SCIENCE",
+         "SANSKRIT",
+         "Optional sub",
+         "COMPUTER"
+       ];
 
      const getSubjectMarks = (subjectName) => {
        const lookupName =
@@ -58,18 +68,29 @@ function ReportCardTemplate2({
     return mark ? mark.grade || "" : "";
   };
 
-  const totalMarksT1 = scholasticMarks.reduce(
-    (sum, m) => sum + (m.marksObtainedT1 || 0),
-    0
-  );
-  const totalMarksT2 = scholasticMarks.reduce(
-    (sum, m) => sum + (m.marksObtainedT2 || 0),
-    0
-  );
-  const overallMarksTotal = scholasticMarks.reduce(
-    (sum, m) => sum + (m.total || 0),
-    0
-  );
+  // ✅ FIX: Exclude optional subjects from totals
+  const excludedSubjects = ["G.K", "COMPUTER", "MORAL SCIENCE"];
+
+  const totalMarksT1 = scholasticMarks
+    .filter(m => !excludedSubjects.includes(m.subjectName?.toUpperCase()))
+    .reduce(
+      (sum, m) => sum + (m.marksObtainedT1 || 0),
+      0
+    );
+
+  const totalMarksT2 = scholasticMarks
+    .filter(m => !excludedSubjects.includes(m.subjectName?.toUpperCase()))
+    .reduce(
+      (sum, m) => sum + (m.marksObtainedT2 || 0),
+      0
+    );
+
+  const overallMarksTotal = scholasticMarks
+    .filter(m => !excludedSubjects.includes(m.subjectName?.toUpperCase()))
+    .reduce(
+      (sum, m) => sum + (m.total || 0),
+      0
+    );
 
   return (
     <div className="template2-report-card">
@@ -222,10 +243,10 @@ function ReportCardTemplate2({
       </div>
 
       <div className="signature-fields">
-        <div>Signature of Class Teacher</div>
-        <div>Signature of Parents</div>
-        <div>Signature of Primary In-charge</div>
-        <div>Signature of Principal</div>
+        <div> Class In-charge </div>
+        <div> Checker </div>
+        <div> Exam In-charge</div>
+        <div> Principal</div>
       </div>
     </div>
   );

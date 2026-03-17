@@ -11,7 +11,6 @@ function ReportCardTemplate3({
   stream: streamProp
 }) {
 
-    debugger;
   const scholasticMarks = marks || [];
 
   const getSubjectMarks = (subjectName) =>
@@ -72,15 +71,16 @@ const getStudentStream = (student) => {
   const allSubjects = [...coreSubjects, ...optionalSubjects];
 
   // totals based on final Total Marks (100)
-  const grandTotal = allSubjects.reduce((sum, sub) => {
-    const m = getSubjectMarks(sub);
-    const total =
-      m.totalMarks100 ??
-      ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0));
-    return sum + (total || 0);
-  }, 0);
+ // ✅ FIX: Exclude optional subjects from totals
+ const grandTotal = coreSubjects.reduce((sum, sub) => {
+   const m = getSubjectMarks(sub);
+   const total =
+     m.totalMarks100 ??
+     ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0));
+   return sum + (total || 0);
+ }, 0);
 
-  const maxTotal = allSubjects.length * 100;
+ const maxTotal = coreSubjects.length * 100;
   const computedPercentage = maxTotal
     ? ((grandTotal / maxTotal) * 100).toFixed(2)
     : "";
@@ -312,10 +312,10 @@ const getStudentStream = (student) => {
       <br/>
       {/* SIGNATURES */}
       <div className="signature-fields">
-        <div>Class Incharge</div>
-        <div>Checker</div>
-        <div>Exam Incharge</div>
-        <div>Principal</div>
+        <div> Class In-charge </div>
+        <div> Checker </div>
+        <div> Exam In-charge</div>
+        <div> Principal</div>
       </div>
     </div>
   );

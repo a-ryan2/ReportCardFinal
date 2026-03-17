@@ -6,6 +6,7 @@ import {
   fetchSections,
   fetchStudents,
   fetchMarksByStudentForReportCard,
+  fetchMarksByStudentForSeniorReportCard,
   fetchCoScholasticMarksByStudentTermForReportCard,
   fetchTerms,
   fetchReportCardByStudent
@@ -64,13 +65,26 @@ const generateReport = async () => {
   }
 
   // Fetch scholastic marks
-  const marksData = await fetchMarksByStudentForReportCard(studentId);
+    let marksData;
+
+    if (classNumber === 10 || classNumber === 11 || classNumber === 12) {
+      marksData = await fetchMarksByStudentForSeniorReportCard(studentId);
+    } else {
+      marksData = await fetchMarksByStudentForReportCard(studentId, classNumber);
+    }
   setMarks(marksData || []);
+
+  const formatAcademicYear = (year) => {
+      if (!year) return "";
+
+      const [start, end] = year.split("-");
+      return `20${start}-20${end}`;
+    };
 
   // Fetch report card to get rank
   const reportCard = await fetchReportCardByStudent(studentId);
   setRank(reportCard?.rank || null);
-  setAcademicYear(reportCard?.academicYear || null);
+  setAcademicYear(formatAcademicYear(reportCard?.academicYear) || null);
 
 
   // Calculate total marks obtained for core subjects only
@@ -114,6 +128,9 @@ const generateReport = async () => {
       { areaName: "Art Education", grade: data.artEducation, term: term.id },
       { areaName: "Work Education", grade: data.workEducation, term: term.id },
       { areaName: "Health & Physical Education", grade: data.healthPhysicalEducation, term: term.id },
+      { areaName: "GK", grade: data.gk, term: term.id },
+      { areaName: "Computer", grade: data.computer, term: term.id },
+      { areaName: "Moral_Science", grade: data.moralScience, term: term.id },
       { areaName: "Regularity & Punctuality", grade: data.discipline.regularityPunctuality, term: term.id },
       { areaName: "Sincerity", grade: data.discipline.sincerity, term: term.id },
       { areaName: "Behaviour & Values", grade: data.discipline.behaviourValues, term: term.id },
@@ -200,9 +217,9 @@ const generateReport = async () => {
 
   const getTemplate = () => {
     if (classNumber >= 1 && classNumber <= 4) return 'template1';
-    if (classNumber >= 5 && classNumber <= 8) return 'template2';
+    if (classNumber >= 5 && classNumber <= 9) return 'template2';
     if (classNumber == 10 || classNumber == 12) return 'template3';
-    if (classNumber == 9 || classNumber == 11) return 'template4';
+    if (classNumber == 11) return 'template4';
     return 'templateDefault';
   };
 

@@ -15,10 +15,14 @@ function ReportCardTemplate1({
   const coMarks = coScholastic || [];
 
      const getSubjectMarks = (subjectName) => {
-       const lookupName =
-         subjectName?.toUpperCase() === "SOCIAL SCIENCE"
-           ? "SST"
-           : subjectName?.toUpperCase();
+       let lookupName = subjectName?.toUpperCase();
+
+        if (lookupName === "SOCIAL SCIENCE") {
+          lookupName = "SST";
+        }
+        if (lookupName === "SCIENCE / EVS") {
+          lookupName = "SCIENCE";
+        }
 
        return (
          scholasticMarks.find(
@@ -111,13 +115,28 @@ function ReportCardTemplate1({
               "ENGLISH",
               "HINDI",
               "MATHEMATICS",
-              "SCIENCE",
+              "SCIENCE / EVS",
               "SOCIAL SCIENCE",
               "G.K.",
               "COMPUTER",
               "MORAL SCIENCE"
             ].map((subject, i) => {
               const subMarks = getSubjectMarks(subject);
+
+              const coAreaMap = {
+                "G.K.": "GK",
+                "COMPUTER": "Computer",
+                "MORAL SCIENCE": "Moral_Science"
+              };
+
+              const mappedArea = coAreaMap[subject];
+              const gradeT1 = mappedArea
+                ? getCoScholasticGrade(mappedArea, 1)
+                : subMarks.gradeT1 || "";
+
+              const gradeT2 = mappedArea
+                ? getCoScholasticGrade(mappedArea, 2)
+                : subMarks.gradeT2 || "";
 
               // Round marks for display only
               const totalMarks = subMarks.total !== undefined ? Math.round(subMarks.total) : "";
@@ -129,15 +148,15 @@ function ReportCardTemplate1({
                   <td>{subMarks.noteBookT1 || ""}</td>
                   <td>{subMarks.subEnrichmentT1 || ""}</td>
                   <td>{subMarks.term1Marks || ""}</td>
-                  <td>{subMarks.marksObtainedT1}</td> {/* Rounded for display */}
-                  <td>{subMarks.gradeT1 || ""}</td>
+                  <td>{subMarks.marksObtainedT1}</td>
+                  <td>{gradeT1}</td>
                   <td>{subMarks.pt2 || ""}</td>
                   <td>{subMarks.noteBookT2 || ""}</td>
                   <td>{subMarks.subEnrichmentT2 || ""}</td>
                   <td>{subMarks.term2Marks || ""}</td>
-                  <td>{subMarks.marksObtainedT2}</td> {/* Rounded for display */}
-                  <td>{subMarks.gradeT2 || ""}</td>
-                  <td>{totalMarks}</td> {/* Rounded for display */}
+                  <td>{subMarks.marksObtainedT2}</td>
+                  <td>{gradeT2}</td>
+                  <td>{totalMarks}</td>
                   <td>{subMarks.overallGrade || ""}</td>
                 </tr>
               );

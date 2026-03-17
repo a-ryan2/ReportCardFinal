@@ -52,7 +52,10 @@ export default function CoScholasticGrades() {
     if (classId && sectionId) {
       setLoading(true);
       fetchStudents(classId, sectionId)
-        .then(setStudents)
+        .then(data => {
+          const sorted = [...data].sort((a, b) => a.rollNumber - b.rollNumber);
+          setStudents(sorted);
+        })
         .finally(() => setLoading(false));
     } else {
       setStudents([]);
@@ -110,7 +113,6 @@ export default function CoScholasticGrades() {
         moralScience: '',
         gk: '',
         computer: '',
-        drawing: '',
       };
       return { ...prev, [studentId]: { ...existing, [field]: value } };
     });
@@ -132,6 +134,24 @@ export default function CoScholasticGrades() {
     const newErrors = {};
     for (const studentId in grades) {
       const g = grades[studentId];
+
+      const hasAnyValue =
+        g.regularityPunctuality ||
+        g.sincerity ||
+        g.behaviourValues ||
+        g.respectfulnessRules ||
+        g.attitudeTeachers ||
+        g.attitudeClassmates ||
+        g.classTeacherRemarks ||
+        g.artEducation ||
+        g.workEducation ||
+        g.healthPhysicalEducation ||
+        g.moralScience ||
+        g.gk ||
+        g.computer;
+
+      if (!hasAnyValue) continue;
+
       if (!g.regularityPunctuality || !g.sincerity) {
         newErrors[studentId] = 'Please fill at least Regularity & Sincerity';
       }
@@ -142,7 +162,24 @@ export default function CoScholasticGrades() {
       return;
     }
 
-    await Promise.all(Object.values(grades).map(g => saveCoScholasticMarks(g)));
+    const gradesToSave = Object.values(grades).filter(g =>
+      g.regularityPunctuality ||
+      g.sincerity ||
+      g.behaviourValues ||
+      g.respectfulnessRules ||
+      g.attitudeTeachers ||
+      g.attitudeClassmates ||
+      g.classTeacherRemarks ||
+      g.artEducation ||
+      g.workEducation ||
+      g.healthPhysicalEducation ||
+      g.moralScience ||
+      g.gk ||
+      g.computer
+    );
+
+    await Promise.all(gradesToSave.map(g => saveCoScholasticMarks(g)));
+
     alert('Co-Scholastic grades saved successfully!');
   }
 
@@ -163,6 +200,7 @@ export default function CoScholasticGrades() {
             <table className="table" style={{ minWidth: '900px' }}>
               <thead>
                 <tr>
+                  <th>Roll No</th>
                   <th>Student</th>
                   <th>Regularity & Punctuality</th>
                   <th>Sincerity</th>
@@ -177,7 +215,6 @@ export default function CoScholasticGrades() {
                   <th>Moral Science</th>
                   <th>GK</th>
                   <th>Computer</th>
-                  <th>Drawing</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,6 +225,7 @@ export default function CoScholasticGrades() {
                     return (
                       <React.Fragment key={student.id}>
                         <tr className={error ? 'error-row' : ''}>
+                          <td>{student.rollNumber}</td>
                           <td>{student.firstName + ' ' + student.lastName}</td>
                           {[
                             'regularityPunctuality',
@@ -203,7 +241,6 @@ export default function CoScholasticGrades() {
                             'moralScience',
                             'gk',
                             'computer',
-                            'drawing',
                           ].map(field => (
                             <td key={field}>
                               <input
@@ -220,7 +257,7 @@ export default function CoScholasticGrades() {
                         </tr>
                         {error && (
                           <tr>
-                            <td colSpan="15" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
+                            <td colSpan="16" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
                               {error}
                             </td>
                           </tr>
@@ -230,7 +267,7 @@ export default function CoScholasticGrades() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan="15" style={{ textAlign: 'center' }}>
+                    <td colSpan="16" style={{ textAlign: 'center' }}>
                       No students to display
                     </td>
                   </tr>

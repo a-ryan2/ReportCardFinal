@@ -449,5 +449,18 @@ body {
   box-sizing: border-box;
 }
 
+/* Table column headers */
+.table th {
+  font-size: 16px;
+  font-weight: 600;
+}
 
-  
+/* Student name column */
+.table td:nth-child(2) {
+  font-size: 16px;
+  font-weight: 500;
+}
+.table td:nth-child(1) {
+  font-size: 16px;
+  font-weight: 500;
+}

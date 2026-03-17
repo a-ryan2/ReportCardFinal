@@ -260,10 +260,14 @@ useEffect(() => {
       const total = m.totalMarks;
       const obtained = m.marksObtained;
 
+      const hasAnyValue = obtained !== '' || m.absent;
+
+      if (!hasAnyValue) continue;
+
       if (!m.absent) {
-        if ((total !== '' && obtained === '') || (total === '' && obtained !== '')) {
-          newErrors[studentId] = 'Both Total Marks and Marks Obtained are required';
-        } else if (total !== '' && obtained !== '' && parseInt(obtained) > parseInt(total)) {
+        if (obtained === '') {
+          newErrors[studentId] = 'Marks Obtained is required';
+        } else if (parseInt(obtained) > parseInt(total)) {
           newErrors[studentId] = 'Marks Obtained cannot exceed Total Marks';
         }
       }
@@ -274,7 +278,11 @@ useEffect(() => {
       return;
     }
 
-    await Promise.all(Object.values(marks).map(m => saveMark(m)));
+    const marksToSave = Object.values(marks).filter(
+      m => m.marksObtained !== '' || m.absent
+    );
+
+    await Promise.all(marksToSave.map(m => saveMark(m)));
 
     await generateReportCardForClassSection(classId, sectionId, students);
 
@@ -319,6 +327,7 @@ useEffect(() => {
           <table className="table" style={{ marginTop: 20 }}>
             <thead>
               <tr>
+                <th>Roll No</th>
                 <th>Student</th>
                 <th>Total Marks</th>
                 <th>Marks Obtained</th>
@@ -333,6 +342,7 @@ useEffect(() => {
                   return (
                     <React.Fragment key={student.id}>
                       <tr className={error ? 'error-row' : ''}>
+                        <td>{student.rollNumber}</td>
                         <td>{student.firstName + ' ' + student.lastName}</td>
                         <td>
                           <span>{mark.totalMarks ?? ''}</span>
@@ -361,7 +371,7 @@ useEffect(() => {
                       </tr>
                       {error && (
                         <tr>
-                          <td colSpan="4" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
+                          <td colSpan="5" style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>
                             {error}
                           </td>
                         </tr>
@@ -371,7 +381,7 @@ useEffect(() => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: 'center' }}>
+                  <td colSpan="5" style={{ textAlign: 'center' }}>
                     No students to display
                   </td>
                 </tr>

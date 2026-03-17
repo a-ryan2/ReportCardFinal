@@ -39,4 +39,10 @@ public class CoScholasticMark {
 
     @Column(length = 20, nullable = false)
     private String academicYear;
+
+    private String gk;
+    private String computer;
+    private String moral_science;
+
+
 }

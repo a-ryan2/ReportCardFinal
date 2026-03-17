@@ -7,7 +7,6 @@ export async function login(username, password) {
   try {
     const res = await axios.post(`${API_BASE}/auth/login`, { username, password });
     const data = res.data;
-    debugger;
     if (data) {
       // Save user details in local storage
       localStorage.setItem("currentUser", JSON.stringify({
@@ -331,6 +330,9 @@ export async function fetchCoScholasticMarksByStudentTermForReportCard(studentId
       artEducation: coMarks.artEducation || '',
       workEducation: coMarks.workEducation || '',
       healthPhysicalEducation: coMarks.healthPhysicalEducation || '',
+      gk: coMarks.gk || '',
+      computer: coMarks.computer || '',
+      moralScience: coMarks.moral_science || '',
       discipline: {
         regularityPunctuality: coMarks.regularityPunctuality || '',
         sincerity: coMarks.sincerity || '',
@@ -372,11 +374,11 @@ export async function saveCoScholasticMarks(mark) {
 }
 
 // Fetch scholastic marks by student and format for Template1 with correct calculations
-export async function fetchMarksByStudentForReportCard(studentId) {
+export async function fetchMarksByStudentForReportCard(studentId, classNumber) {
   try {
     const res = await axios.get(`${API_BASE}/marks/student/${studentId}`);
     const marksData = res.data || [];
-
+    const examWeight = classNumber <= 4 ? 30 : 80;
     const subjectMap = {};
 
     marksData.forEach((m) => {
@@ -427,7 +429,7 @@ export async function fetchMarksByStudentForReportCard(studentId) {
         } else if (examType.includes("SUB ENRICHMENT")) {
           subjectMap[subjectName].subEnrichmentT1 = scaleMarks(marksObtained, totalMarks, 5);
         } else if (examType.includes("HALF YEARLY / ANNUAL")) {
-          subjectMap[subjectName].term1Marks = scaleMarks(marksObtained, totalMarks, 30);
+          subjectMap[subjectName].term1Marks = scaleMarks(marksObtained, totalMarks, examWeight);
         }
       } else if (termNumber === "2") {
         if (examType.includes("PT")) {
@@ -437,22 +439,24 @@ export async function fetchMarksByStudentForReportCard(studentId) {
         } else if (examType.includes("SUB ENRICHMENT")) {
           subjectMap[subjectName].subEnrichmentT2 = scaleMarks(marksObtained, totalMarks, 5);
         } else if (examType.includes("HALF YEARLY / ANNUAL")) {
-          subjectMap[subjectName].term2Marks = scaleMarks(marksObtained, totalMarks, 30);
+          subjectMap[subjectName].term2Marks = scaleMarks(marksObtained, totalMarks, examWeight);
         }
       }
     });
 
     // Compute totals and grades
     Object.values(subjectMap).forEach((sub) => {
+      const termMax = classNumber <= 4 ? 50 : 100;
       // Term 1 out of 50
       const t1Score = sub.pt1 + sub.noteBookT1 + sub.subEnrichmentT1 + sub.term1Marks;
       sub.marksObtainedT1 = parseFloat(t1Score.toFixed(2));
-      sub.gradeT1 = calculateGradeFromPercent((t1Score / 50) * 100);
+      sub.gradeT1 = calculateGradeFromPercent((t1Score / termMax) * 100);
 
       // Term 2 out of 50
+
       const t2Score = sub.pt2 + sub.noteBookT2 + sub.subEnrichmentT2 + sub.term2Marks;
       sub.marksObtainedT2 = parseFloat(t2Score.toFixed(2));
-      sub.gradeT2 = calculateGradeFromPercent((t2Score / 50) * 100);
+      sub.gradeT2 = calculateGradeFromPercent((t2Score / termMax) * 100);
 
       // Total (out of 100)
       const total = t1Score + t2Score;
@@ -463,6 +467,127 @@ export async function fetchMarksByStudentForReportCard(studentId) {
     return Object.values(subjectMap);
   } catch (error) {
     console.error("Error fetching marks:", error);
+    return [];
+  }
+}
+
+// Fetch scholastic marks for Template3 & Template4 (Senior Classes)
+export async function fetchMarksByStudentForSeniorReportCard(studentId) {
+  try {
+    const res = await axios.get(`${API_BASE}/marks/student/${studentId}`);
+    const marksData = res.data || [];
+    const subjectMap = {};
+
+    const convertTheory = (obtained, total) => {
+      if (total === 70) return parseFloat(((obtained / 70) * 40).toFixed(2));
+      if (total === 80) return parseFloat(((obtained / 80) * 50).toFixed(2));
+      return obtained;
+    };
+
+    const convertPractical = (obtained, total) => {
+      if (total === 20) return obtained;
+      if (total === 30) return obtained;
+      return obtained;
+    };
+
+    marksData.forEach((m) => {
+
+      const subjectName = m.subject?.name?.toUpperCase() || "UNKNOWN";
+      const termName = m.term?.name?.toLowerCase() || "";
+      const termNumber = termName.includes("2") ? "2" : "1";
+      const examType = m.examType?.name?.toUpperCase() || "";
+      const marksObtained = Number(m.marksObtained) || 0;
+      const totalMarks = Number(m.totalMarks) || 0;
+
+      if (!subjectMap[subjectName]) {
+        subjectMap[subjectName] = {
+          subjectName,
+
+          pt1Actual: "",
+          pt2Actual: "",
+          halfYearlyActual: "",
+          preBoard1Actual: "",
+          preBoard2Actual: "",
+          annualActual: "",
+          practicalProjectAslActual: "",
+
+          convPt1: 0,
+          convPt2: 0,
+          convHalfYearly: 0,
+          convPreboardBest: 0,
+          convAnnual: 0,
+
+          convTheory: 0,
+          convPractical: 0,
+          totalMarks100: 0
+        };
+      }
+
+      const subject = subjectMap[subjectName];
+
+      if (termNumber === "1") {
+        if (examType.includes("PT")) {
+            subject.pt1Actual = marksObtained;
+            subject.convPt1 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
+        } else if (examType.includes("HALF")) {
+             subject.halfYearlyActual = marksObtained;
+             subject.convHalfYearly = parseFloat(((marksObtained / totalMarks) * 20).toFixed(2));
+        }
+      } else if (termNumber === "2") {
+        if (examType.includes("PT")) {
+                subject.pt2Actual = marksObtained;
+                subject.convPt2 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
+        } else if (examType.includes("HALF")) {
+                subject.annualActual = marksObtained;
+                subject.convAnnual = convertTheory(marksObtained, totalMarks);
+        }
+      }
+        else if (examType.includes("PRE") && examType.includes("1")) {
+              subject.preBoard1Actual = marksObtained;
+              const converted = convertTheory(marksObtained, totalMarks);
+              subject.convPreboardBest = Math.max(subject.convPreboardBest, converted);
+            }
+
+            else if (examType.includes("PRE") && examType.includes("2")) {
+              subject.preBoard2Actual = marksObtained;
+
+              const converted = convertTheory(marksObtained, totalMarks);
+              subject.convPreboardBest = Math.max(subject.convPreboardBest, converted);
+            }
+
+      else if (
+        examType.includes("PRACTICAL") ||
+        examType.includes("PROJECT") ||
+        examType.includes("ASL")
+      ) {
+        subject.practicalProjectAslActual = marksObtained;
+        subject.convPractical = convertPractical(marksObtained, totalMarks);
+      }
+
+    });
+
+    Object.values(subjectMap).forEach((sub) => {
+
+      const theoryMarks =
+        sub.convPreboardBest > 0
+          ? sub.convPreboardBest
+          : sub.convAnnual;
+
+      sub.convTheory =
+        sub.convPt1 +
+        sub.convPt2 +
+        sub.convHalfYearly +
+        theoryMarks;
+
+      sub.totalMarks100 =
+        sub.convTheory +
+        sub.convPractical;
+    });
+
+    return Object.values(subjectMap);
+
+  } catch (error) {
+    console.error("Error fetching senior marks:", error);
     return [];
   }
 }
@@ -484,10 +609,8 @@ function calculateGradeFromPercent(percent) {
 /* -------------------- REPORT CARD Table Record generation to calculate rank -------------------- */
 export async function generateReportCardForClassSection(classId, sectionId, students) {
   try {
-  debugger;
     for (const student of students) {
       const res = await axios.get(`${API_BASE}/marks/student/${student.id}`);
-      debugger;
       const marksData = res.data || [];
 
       // Always assume both terms exist (each out of 50)
