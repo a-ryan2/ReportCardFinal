@@ -14,6 +14,13 @@ function ReportCardTemplate1({
   const scholasticMarks = marks || [];
   const coMarks = coScholastic || [];
 
+  const formatMarks = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const num = Number(value);
+    if (isNaN(num)) return value;
+    return parseFloat(num.toFixed(2));
+  };
+
      const getSubjectMarks = (subjectName) => {
        let lookupName = subjectName?.toUpperCase();
 
@@ -49,9 +56,9 @@ function ReportCardTemplate1({
     const overallMarksTotal = totalMarksT1 + totalMarksT2;
 
     // Format them all with 2 decimal places for display
-    const formattedTotalT1 = totalMarksT1.toFixed(2);
-    const formattedTotalT2 = totalMarksT2.toFixed(2);
-    const formattedOverall = overallMarksTotal.toFixed(0);
+    const formattedTotalT1 = formatMarks(totalMarksT1);
+    const formattedTotalT2 = formatMarks(totalMarksT2);
+    const formattedOverall = formatMarks(overallMarksTotal);
 
   return (
     <div className="template1-report-card">
@@ -63,7 +70,7 @@ function ReportCardTemplate1({
 
         <div className="school-subtitle">
             Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: <span className="num">2247066</span><br />
-            Affiliation No: <span className="num">53088</span> &nbsp;|&nbsp; Affiliated to CBSE
+            Affiliation No: <span className="num">530888</span> &nbsp;|&nbsp; Affiliated to CBSE
         </div>
 
 
@@ -140,13 +147,6 @@ function ReportCardTemplate1({
 
               // Round marks for display only
               const totalMarks = subMarks.total !== undefined ? Math.round(subMarks.total) : "";
-
-              const formatMarks = (value) => {
-                if (value === null || value === undefined || value === "") return "";
-                const num = Number(value);
-                if (isNaN(num)) return value;
-                return num.toFixed(2);
-              };
 
               return (
                 <tr key={i}>

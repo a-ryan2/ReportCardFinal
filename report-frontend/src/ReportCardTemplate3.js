@@ -13,6 +13,13 @@ function ReportCardTemplate3({
 
   const scholasticMarks = marks || [];
 
+  const formatMarks = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const num = Number(value);
+    if (isNaN(num)) return value;
+    return parseFloat(num.toFixed(2));
+  };
+
     const getSubjectMarks = (subjectName) => {
       const lookupName = subjectName?.toUpperCase();
 
@@ -116,13 +123,6 @@ const getStudentStream = (student) => {
       m.totalMarks100 ??
       ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0));
 
-    const formatMarks = (value) => {
-      if (value === null || value === undefined || value === "") return "";
-      const num = Number(value);
-      if (isNaN(num)) return value;
-      return parseFloat(num.toFixed(2)); // max 2 decimal places
-    };
-
     return (
       <tr key={keyPrefix + sub}>
         <td className="subject-name">{sub}</td>
@@ -159,7 +159,7 @@ const getStudentStream = (student) => {
 
             <div className="school-subtitle">
                 Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: <span className="num">2247066</span><br />
-                Affiliation No: <span className="num">53088</span> &nbsp;|&nbsp; Affiliated to CBSE
+                Affiliation No: <span className="num">530888</span> &nbsp;|&nbsp; Affiliated to CBSE
             </div>
 
       <div className="school-subtitle">
@@ -284,7 +284,7 @@ const getStudentStream = (student) => {
             <tr className="total-row">
               <td className="subject-name">Grand Total</td>
               <td colSpan="12"></td>
-              <td>{grandTotal || ""}</td>
+              <td>{formatMarks(grandTotal)}</td>
             </tr>
           </tbody>
         </table>

@@ -92,7 +92,7 @@ const getStudentStream = (student) => {
 
   // totals based on final Total Marks (100)
   // ✅ FIX: Exclude optional subjects from totals
-  const grandTotal = coreSubjects.reduce((sum, sub) => {
+  const grandTotalRaw = coreSubjects.reduce((sum, sub) => {
     const m = getSubjectMarks(sub);
     const total =
       m.totalMarks100 ??
@@ -100,9 +100,18 @@ const getStudentStream = (student) => {
     return sum + (total || 0);
   }, 0);
 
+  const formatMarks = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const num = Number(value);
+    if (isNaN(num)) return value;
+    return parseFloat(num.toFixed(2));
+  };
+
+  const grandTotal = formatMarks(grandTotalRaw);
+
   const maxTotal = coreSubjects.length * 100;
   const computedPercentage = maxTotal
-    ? ((grandTotal / maxTotal) * 100).toFixed(2)
+    ? ((grandTotalRaw / maxTotal) * 100).toFixed(2)
     : "";
 
   const finalPercentage = totalPercentage || computedPercentage;
@@ -113,13 +122,6 @@ const getStudentStream = (student) => {
     const totalMarks100 =
       m.totalMarks100 ??
       ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0));
-
-    const formatMarks = (value) => {
-      if (value === null || value === undefined || value === "") return "";
-      const num = Number(value);
-      if (isNaN(num)) return value;
-      return parseFloat(num.toFixed(2)); // max 2 decimals
-    };
 
     return (
       <tr key={keyPrefix + sub}>
@@ -156,7 +158,7 @@ const getStudentStream = (student) => {
 
             <div className="school-subtitle">
                 Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: <span className="num">2247066</span><br />
-                Affiliation No: <span className="num">53088</span> &nbsp;|&nbsp; Affiliated to CBSE
+                Affiliation No: <span className="num">530888</span> &nbsp;|&nbsp; Affiliated to CBSE
             </div>
 
       <div className="school-subtitle">
@@ -280,7 +282,7 @@ const getStudentStream = (student) => {
             <tr className="total-row">
               <td className="subject-name">Grand Total</td>
               <td colSpan="11"></td>
-              <td>{grandTotal || ""}</td>
+              <td>{grandTotal}</td>
             </tr>
           </tbody>
         </table>

@@ -14,6 +14,13 @@ function ReportCardTemplate2({
   const scholasticMarks = marks || [];
   const coMarks = coScholastic || [];
 
+  const formatMarks = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const num = Number(value);
+    if (isNaN(num)) return value;
+    return parseFloat(num.toFixed(2));
+  };
+
   const classNo = parseInt(student?.classEntity?.name);
 
  const subjects =
@@ -113,7 +120,7 @@ function ReportCardTemplate2({
 
                   <div className="school-subtitle">
                      Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: <span className="num">2247066</span><br />
-                     Affiliation No: <span className="num">53088</span> &nbsp;|&nbsp; Affiliated to CBSE
+                     Affiliation No: <span className="num">530888</span> &nbsp;|&nbsp; Affiliated to CBSE
                   </div>
 
       {/* === COMPACT STUDENT INFO GRID (Copied from Template1) === */}
@@ -168,12 +175,6 @@ function ReportCardTemplate2({
                   </tr>
                 );
               }
-              const formatMarks = (value) => {
-                if (value === null || value === undefined || value === "") return "";
-                const num = Number(value);
-                if (isNaN(num)) return value;
-                return num.toFixed(2);
-              };
               return (
                 <tr key={i}>
                   <td className="subject-name">{subject}</td>
@@ -189,7 +190,7 @@ function ReportCardTemplate2({
                   <td>{formatMarks(subMarks.term2Marks)}</td>
                   <td>{formatMarks(subMarks.marksObtainedT2)}</td>
                   <td>{subMarks.gradeT2 || ""}</td>
-                  <td>{formatMarks(subMarks.total)}</td>
+                  <td>{formatMarks(subMarks.total)/2}</td>
                   <td>{subMarks.overallGrade || ""}</td>
                 </tr>
               );
@@ -197,12 +198,12 @@ function ReportCardTemplate2({
             <tr className="total-row">
               <td className="subject-name">Grand Total</td>
               <td colSpan="4"></td>
-              <td>{totalMarksT1}</td>
+              <td>{formatMarks(totalMarksT1)}</td>
               <td></td>
               <td colSpan="4"></td>
-              <td>{totalMarksT2}</td>
+              <td>{formatMarks(totalMarksT2)}</td>
               <td></td>
-              <td>{overallMarksTotal}</td>
+              <td>{formatMarks(overallMarksTotal)/2}</td>
               <td></td>
             </tr>
           </tbody>
