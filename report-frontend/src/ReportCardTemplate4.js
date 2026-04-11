@@ -280,7 +280,7 @@ const getStudentStream = (student) => {
 
             {/* GRAND TOTAL */}
             <tr className="total-row">
-              <td className="subject-name">Grand Total</td>
+              <td className="subject-name">GRAND TOTAL</td>
               <td colSpan="11"></td>
               <td>{grandTotal}</td>
             </tr>

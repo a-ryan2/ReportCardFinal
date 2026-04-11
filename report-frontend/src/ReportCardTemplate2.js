@@ -190,20 +190,20 @@ function ReportCardTemplate2({
                   <td>{formatMarks(subMarks.term2Marks)}</td>
                   <td>{formatMarks(subMarks.marksObtainedT2)}</td>
                   <td>{subMarks.gradeT2 || ""}</td>
-                  <td>{formatMarks(subMarks.total)/2}</td>
+                  <td>{formatMarks(subMarks.total/2)}</td>
                   <td>{subMarks.overallGrade || ""}</td>
                 </tr>
               );
             })}
             <tr className="total-row">
-              <td className="subject-name">Grand Total</td>
+              <td className="subject-name">GRAND TOTAL</td>
               <td colSpan="4"></td>
               <td>{formatMarks(totalMarksT1)}</td>
               <td></td>
               <td colSpan="4"></td>
               <td>{formatMarks(totalMarksT2)}</td>
               <td></td>
-              <td>{formatMarks(overallMarksTotal)/2}</td>
+              <td>{formatMarks(overallMarksTotal/2)}</td>
               <td></td>
             </tr>
           </tbody>

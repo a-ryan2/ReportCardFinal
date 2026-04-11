@@ -99,7 +99,7 @@ function ReportCardTemplate1({
               </th>
               <th colSpan="6" className="term-header term1">Term-1 (50 Marks)</th>
               <th colSpan="6" className="term-header term2">Term-2 (50 Marks)</th>
-              <th rowSpan="2" className="main-title">Total (T1+T2)</th>
+              <th rowSpan="2" className="main-title">GRAND TOTAL (T1+T2)</th>
               <th rowSpan="2" className="main-title">Overall Grade</th>
             </tr>
             <tr>
