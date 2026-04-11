@@ -198,3 +198,7 @@ th, td {
   border-left: none;
   border-right: none;
 }
+
+.num {
+  font-family: 'Arial', sans-serif;
+}

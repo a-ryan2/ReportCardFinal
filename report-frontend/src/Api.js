@@ -542,7 +542,7 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId) {
                 subject.convAnnual = convertTheory(marksObtained, totalMarks);
         }
       }
-        else if (examType.includes("PRE") && examType.includes("1")) {
+      if (examType.includes("PRE") && examType.includes("1")) {
               subject.preBoard1Actual = marksObtained;
               const converted = convertTheory(marksObtained, totalMarks);
               subject.convPreboardBest = Math.max(subject.convPreboardBest, converted);

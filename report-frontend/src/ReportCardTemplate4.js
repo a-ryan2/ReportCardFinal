@@ -13,10 +13,31 @@ function ReportCardTemplate4({
 
   const scholasticMarks = marks || [];
 
-  const getSubjectMarks = (subjectName) =>
-    scholasticMarks.find(
-      (m) => m.subjectName?.toUpperCase() === subjectName.toUpperCase()
-    ) || {};
+const getSubjectMarks = (subjectName) => {
+  const lookupName = subjectName?.toUpperCase();
+
+      // ✅ Required mappings for Template 4
+      const subjectAliases = {
+        "COMP. SCIENCE": ["COMPUTER SCIENCE"],
+        "PHY. EDU.": ["PHYSICAL EDUCATION"]
+      };
+
+      // 1️⃣ Try exact match
+      let match = scholasticMarks.find(
+        (m) => m.subjectName?.toUpperCase() === lookupName
+      );
+
+      // 2️⃣ Try alias match if not found
+      if (!match && subjectAliases[lookupName]) {
+        match = scholasticMarks.find((m) =>
+          subjectAliases[lookupName].includes(
+            m.subjectName?.toUpperCase()
+          )
+        );
+      }
+
+      return match || {};
+    };
 
   // stream resolution
 const getStudentStream = (student) => {
@@ -93,27 +114,34 @@ const getStudentStream = (student) => {
       m.totalMarks100 ??
       ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0));
 
+    const formatMarks = (value) => {
+      if (value === null || value === undefined || value === "") return "";
+      const num = Number(value);
+      if (isNaN(num)) return value;
+      return parseFloat(num.toFixed(2)); // max 2 decimals
+    };
+
     return (
       <tr key={keyPrefix + sub}>
         <td className="subject-name">{sub}</td>
 
         {/* Actual marks */}
-        <td>{m.pt1Actual || ""}</td>
-        <td>{m.pt2Actual || ""}</td>
-        <td>{m.halfYearlyActual || ""}</td>
-        <td>{m.annualExamActual || ""}</td>
-        <td>{m.practicalProjectAslActual || ""}</td>
+        <td>{formatMarks(m.pt1Actual)}</td>
+        <td>{formatMarks(m.pt2Actual)}</td>
+        <td>{formatMarks(m.halfYearlyActual)}</td>
+        <td>{formatMarks(m.annualActual)}</td>
+        <td>{formatMarks(m.practicalProjectAslActual)}</td>
 
-        {/* Converted marks (only 4) */}
-        <td>{m.convPt1 || ""}</td>
-        <td>{m.convPt2 || ""}</td>
-        <td>{m.convHalfYearly || ""}</td>
-        <td>{m.convAnnualExam || ""}</td>
+        {/* Converted marks */}
+        <td>{formatMarks(m.convPt1)}</td>
+        <td>{formatMarks(m.convPt2)}</td>
+        <td>{formatMarks(m.convHalfYearly)}</td>
+        <td>{formatMarks(m.convAnnual)}</td>
 
-        {/* Final breakup on far right */}
-        <td>{m.convTheory || ""}</td>
-        <td>{m.convPractical || ""}</td>
-        <td>{totalMarks100 || ""}</td>
+        {/* Final */}
+        <td>{formatMarks(m.convTheory)}</td>
+        <td>{formatMarks(m.convPractical)}</td>
+        <td>{formatMarks(totalMarks100)}</td>
       </tr>
     );
   };
@@ -127,14 +155,13 @@ const getStudentStream = (student) => {
             </div>
 
             <div className="school-subtitle">
-              Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: 2247066
-              <br />
-              Affiliation No: 53088 &nbsp;|&nbsp; Affiliated to CBSE
+                Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: <span className="num">2247066</span><br />
+                Affiliation No: <span className="num">53088</span> &nbsp;|&nbsp; Affiliated to CBSE
             </div>
 
       <div className="school-subtitle">
         Academic Performance Report – {student?.classEntity?.name}
-        {stream && ` (${stream.split("_").join(" ")} Stream)`}
+        {stream && ` (${stream.split("_").join(" ")} STREAM)`}
 
       </div>
 
@@ -162,10 +189,10 @@ const getStudentStream = (student) => {
           <span>Admission No:</span> <b>{student?.admissionNo}</b>
         </div>
         <div>
-          <span>Father Name:</span> <b>{student?.fatherName}</b>
+          <span>Father&apos;s Name:</span> <b>{student?.fatherName}</b>
         </div>
         <div>
-          <span>Mother Name:</span> <b>{student?.motherName}</b>
+          <span>Mother&apos;s Name:</span> <b>{student?.motherName}</b>
         </div>
         <div>
           <span>Academic Year:</span> <b>{academicYear}</b>
@@ -178,7 +205,7 @@ const getStudentStream = (student) => {
           <thead>
             <tr>
               <th rowSpan="3" className="main-title subject-col">
-                Subject Name
+                SUBJECTS
               </th>
 
               {/* Actual Marks block */}
@@ -239,11 +266,12 @@ const getStudentStream = (student) => {
             {/* CORE SUBJECTS */}
             {coreSubjects.map((sub) => renderSubjectRow(sub, "core-"))}
 
-            {/* OPTIONAL LABEL ROW */}
-            <tr className="optional-row">
-              <td className="subject-name optional-title">OPTIONAL</td>
-              <td colSpan="12"></td>
-            </tr>
+            {classNo !== 11 && (
+              <tr className="optional-row">
+                <td className="subject-name optional-title">OPTIONAL</td>
+                <td colSpan="12"></td>
+              </tr>
+            )}
 
             {/* OPTIONAL SUBJECTS */}
             {optionalSubjects.map((sub) => renderSubjectRow(sub, "opt-"))}
@@ -309,9 +337,9 @@ const getStudentStream = (student) => {
       <br/>
       {/* SIGNATURES */}
       <div className="signature-fields">
-          <div> Class In-charge </div>
+          <div> Class Incharge </div>
           <div> Checker </div>
-          <div> Exam In-charge</div>
+          <div> Exam Incharge</div>
           <div> Principal</div>
       </div>
     </div>

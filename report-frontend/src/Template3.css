@@ -31,6 +31,7 @@
 
 .school-subtitle {
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   text-align: center;
   font-weight: 600;
   color: #000;
@@ -208,4 +209,8 @@ td {
   .signature-fields {
     page-break-inside: avoid;
   }
+}
+
+.num {
+  font-family: 'Arial', sans-serif;
 }

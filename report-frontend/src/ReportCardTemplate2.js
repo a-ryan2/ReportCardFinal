@@ -1,4 +1,5 @@
 import React from "react";
+import AryaVidyaMandirLogo from "./AryaVidyaMandirLogo.png";
 import "./Template2.css";
 
 function ReportCardTemplate2({
@@ -48,18 +49,28 @@ function ReportCardTemplate2({
          "COMPUTER"
        ];
 
-     const getSubjectMarks = (subjectName) => {
-       const lookupName =
-         subjectName?.toUpperCase() === "SOCIAL SCIENCE"
-           ? "SST"
-           : subjectName?.toUpperCase();
+    const getSubjectMarks = (subjectName) => {
+      let lookupName = subjectName?.toUpperCase();
 
-       return (
-         scholasticMarks.find(
-           (m) => m.subjectName?.toUpperCase() === lookupName
-         ) || {}
-       );
-     };
+      // Standard mapping
+      if (lookupName === "SOCIAL SCIENCE") {
+        lookupName = "SST";
+      }
+
+      // ✅ IMPORTANT FIX (your logic)
+      let match =
+        scholasticMarks.find(
+          (m) => m.subjectName?.toUpperCase() === lookupName
+        );
+      // 👉 If UI subject is COMPUTER but not found → try IT
+      if (!match && lookupName === "COMPUTER") {
+        match = scholasticMarks.find(
+          (m) => m.subjectName?.toUpperCase() === "IT"
+        );
+      }
+
+      return match || {};
+    };
 
   const getCoScholasticGrade = (areaName, term) => {
     const mark = coMarks.find(
@@ -69,7 +80,7 @@ function ReportCardTemplate2({
   };
 
   // ✅ FIX: Exclude optional subjects from totals
-  const excludedSubjects = ["G.K", "COMPUTER", "MORAL SCIENCE"];
+  const excludedSubjects = ["G.K", "COMPUTER", "MORAL SCIENCE", "IT"];
 
   const totalMarksT1 = scholasticMarks
     .filter(m => !excludedSubjects.includes(m.subjectName?.toUpperCase()))
@@ -94,7 +105,16 @@ function ReportCardTemplate2({
 
   return (
     <div className="template2-report-card">
-      <div className="school-title">ARYA VIDYA MANDIR SR. SEC SCHOOL</div>
+         {/* ===== SCHOOL HEADER (SAME AS TEMPLATE 1) ===== */}
+                  <div className="school-title">
+                    <img src={AryaVidyaMandirLogo} alt="School Logo" className="school-logo" />
+                    <span>ARYA VIDYA MANDIR SR. SEC SCHOOL</span>
+                  </div>
+
+                  <div className="school-subtitle">
+                     Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: <span className="num">2247066</span><br />
+                     Affiliation No: <span className="num">53088</span> &nbsp;|&nbsp; Affiliated to CBSE
+                  </div>
 
       {/* === COMPACT STUDENT INFO GRID (Copied from Template1) === */}
       <div className="student-info-grid">
@@ -103,8 +123,8 @@ function ReportCardTemplate2({
         <div><span>Class & Section:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
         <div><span>SRN:</span> <b>{student.srn}</b></div>
         <div><span>Admission No:</span> <b>{student.admissionNo}</b></div>
-        <div><span>Father Name:</span> <b>{student.fatherName}</b></div>
-        <div><span>Mother Name:</span> <b>{student.motherName}</b></div>
+        <div><span>Father&apos;s Name:</span> <b>{student.fatherName}</b></div>
+        <div><span>Mother&apos;s Name:</span> <b>{student.motherName}</b></div>
         <div><span>Academic Year:</span> <b>{academicYear}</b></div>
       </div>
 
@@ -113,7 +133,7 @@ function ReportCardTemplate2({
         <table className="scholastic-table2">
           <thead>
             <tr>
-              <th rowSpan="2" className="subject-head">SUBJECT</th>
+              <th rowSpan="2" className="subject-head">SUBJECTS</th>
               <th colSpan="6" className="term-header term1">Term-I (100 Marks)</th>
               <th colSpan="6" className="term-header term2">Term-II (100 Marks)</th>
               <th colSpan="2" className="overall-head">Overall (Term-I + Term-II) / 2</th>
@@ -148,28 +168,34 @@ function ReportCardTemplate2({
                   </tr>
                 );
               }
+              const formatMarks = (value) => {
+                if (value === null || value === undefined || value === "") return "";
+                const num = Number(value);
+                if (isNaN(num)) return value;
+                return num.toFixed(2);
+              };
               return (
                 <tr key={i}>
                   <td className="subject-name">{subject}</td>
-                  <td>{subMarks.pt1 || ""}</td>
-                  <td>{subMarks.noteBookT1 || ""}</td>
-                  <td>{subMarks.subEnrichmentT1 || ""}</td>
-                  <td>{subMarks.term1Marks || ""}</td>
-                  <td>{subMarks.marksObtainedT1 || ""}</td>
+                  <td>{formatMarks(subMarks.pt1)}</td>
+                  <td>{formatMarks(subMarks.noteBookT1)}</td>
+                  <td>{formatMarks(subMarks.subEnrichmentT1)}</td>
+                  <td>{formatMarks(subMarks.term1Marks)}</td>
+                  <td>{formatMarks(subMarks.marksObtainedT1)}</td>
                   <td>{subMarks.gradeT1 || ""}</td>
-                  <td>{subMarks.pt2 || ""}</td>
-                  <td>{subMarks.noteBookT2 || ""}</td>
-                  <td>{subMarks.subEnrichmentT2 || ""}</td>
-                  <td>{subMarks.term2Marks || ""}</td>
-                  <td>{subMarks.marksObtainedT2 || ""}</td>
+                  <td>{formatMarks(subMarks.pt2)}</td>
+                  <td>{formatMarks(subMarks.noteBookT2)}</td>
+                  <td>{formatMarks(subMarks.subEnrichmentT2)}</td>
+                  <td>{formatMarks(subMarks.term2Marks)}</td>
+                  <td>{formatMarks(subMarks.marksObtainedT2)}</td>
                   <td>{subMarks.gradeT2 || ""}</td>
-                  <td>{subMarks.total || ""}</td>
+                  <td>{formatMarks(subMarks.total)}</td>
                   <td>{subMarks.overallGrade || ""}</td>
                 </tr>
               );
             })}
             <tr className="total-row">
-              <td className="subject-name">Total</td>
+              <td className="subject-name">Grand Total</td>
               <td colSpan="4"></td>
               <td>{totalMarksT1}</td>
               <td></td>
@@ -243,9 +269,9 @@ function ReportCardTemplate2({
       </div>
 
       <div className="signature-fields">
-        <div> Class In-charge </div>
+        <div> Class Incharge </div>
         <div> Checker </div>
-        <div> Exam In-charge</div>
+        <div> Exam Incharge</div>
         <div> Principal</div>
       </div>
     </div>

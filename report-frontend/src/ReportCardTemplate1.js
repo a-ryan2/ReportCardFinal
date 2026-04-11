@@ -62,8 +62,8 @@ function ReportCardTemplate1({
         </div>
 
         <div className="school-subtitle">
-            Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: 2247066<br />
-            Affiliation No: 53088 &nbsp;|&nbsp; Affiliated to CBSE
+            Milk Plant Road, Ballabgarh, Faridabad &nbsp;|&nbsp; Ph. No: <span className="num">2247066</span><br />
+            Affiliation No: <span className="num">53088</span> &nbsp;|&nbsp; Affiliated to CBSE
         </div>
 
 
@@ -74,8 +74,8 @@ function ReportCardTemplate1({
         <div><span>Class & Section:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
         <div><span>SRN:</span> <b>{student.srn}</b></div>
         <div><span>Admission No:</span> <b>{student.admissionNo}</b></div>
-        <div><span>Father Name:</span> <b>{student.fatherName}</b></div>
-        <div><span>Mother Name:</span> <b>{student.motherName}</b></div>
+        <div><span>Father&apos;s Name:</span> <b>{student.fatherName}</b></div>
+        <div><span>Mother&apos;s Name:</span> <b>{student.motherName}</b></div>
         <div><span>Academic Year:</span> <b>{academicYear}</b></div>
       </div>
 
@@ -141,22 +141,29 @@ function ReportCardTemplate1({
               // Round marks for display only
               const totalMarks = subMarks.total !== undefined ? Math.round(subMarks.total) : "";
 
+              const formatMarks = (value) => {
+                if (value === null || value === undefined || value === "") return "";
+                const num = Number(value);
+                if (isNaN(num)) return value;
+                return num.toFixed(2);
+              };
+
               return (
                 <tr key={i}>
                   <td className="subject-name">{subject}</td>
-                  <td>{subMarks.pt1 || ""}</td>
-                  <td>{subMarks.noteBookT1 || ""}</td>
-                  <td>{subMarks.subEnrichmentT1 || ""}</td>
-                  <td>{subMarks.term1Marks || ""}</td>
-                  <td>{subMarks.marksObtainedT1}</td>
+                  <td>{formatMarks(subMarks.pt1)}</td>
+                  <td>{formatMarks(subMarks.noteBookT1)}</td>
+                  <td>{formatMarks(subMarks.subEnrichmentT1)}</td>
+                  <td>{formatMarks(subMarks.term1Marks)}</td>
+                  <td>{formatMarks(subMarks.marksObtainedT1)}</td>
                   <td>{gradeT1}</td>
-                  <td>{subMarks.pt2 || ""}</td>
-                  <td>{subMarks.noteBookT2 || ""}</td>
-                  <td>{subMarks.subEnrichmentT2 || ""}</td>
-                  <td>{subMarks.term2Marks || ""}</td>
-                  <td>{subMarks.marksObtainedT2}</td>
+                  <td>{formatMarks(subMarks.pt2)}</td>
+                  <td>{formatMarks(subMarks.noteBookT2)}</td>
+                  <td>{formatMarks(subMarks.subEnrichmentT2)}</td>
+                  <td>{formatMarks(subMarks.term2Marks)}</td>
+                  <td>{formatMarks(subMarks.marksObtainedT2)}</td>
                   <td>{gradeT2}</td>
-                  <td>{totalMarks}</td>
+                  <td>{formatMarks(totalMarks)}</td>
                   <td>{subMarks.overallGrade || ""}</td>
                 </tr>
               );
@@ -215,8 +222,8 @@ function ReportCardTemplate1({
               "Sincerity",
               "Behaviour & Values",
               "Respectfulness for Rules & Regulation",
-              "Attitude towards Teachers",
-              "Attitude towards School-Mates"
+              "Attitude Towards Teachers",
+              "Attitude Towards School-Mates"
             ].map((elem, i) => (
               <tr key={i}>
                 <td>{elem}</td>
