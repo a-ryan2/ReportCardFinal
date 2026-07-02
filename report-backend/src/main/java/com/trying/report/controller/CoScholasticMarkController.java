@@ -15,23 +15,16 @@ public class CoScholasticMarkController {
     @Autowired
     private CoScholasticMarkService service;
 
-    // Get marks for a student + term
     @GetMapping("/student/{studentId}/term/{termId}")
-    public List<CoScholasticMark> getByStudentTerm(@PathVariable Long studentId, @PathVariable Long termId) {
-        return service.getByStudentAndTerm(studentId, termId);
+    public List<CoScholasticMark> getByStudentTerm(@PathVariable Long studentId, @PathVariable Long termId, @RequestParam String academicYear) {
+        return service.getByStudentAndTerm(studentId, termId, academicYear);
     }
 
-    // Get all marks for class + section + term
     @GetMapping("/class/{classId}/section/{sectionId}/term/{termId}")
-    public List<CoScholasticMark> getByClassSectionTerm(
-            @PathVariable Long classId,
-            @PathVariable Long sectionId,
-            @PathVariable Long termId
-    ) {
-        return service.getByClassSectionTerm(classId, sectionId, termId);
+    public List<CoScholasticMark> getByClassSectionTerm(@PathVariable Long classId, @PathVariable Long sectionId, @PathVariable Long termId, @RequestParam String academicYear) {
+        return service.getByClassSectionTerm(classId, sectionId, termId, academicYear);
     }
 
-    // Save or update co-scholastic marks
     @PostMapping
     public CoScholasticMark save(@RequestBody CoScholasticMark mark) {
         return service.save(mark);

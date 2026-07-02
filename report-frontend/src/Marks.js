@@ -10,6 +10,7 @@ import {
   fetchMarksByStudent,
   saveMark,
   fetchClassAdminByUserId,
+  fetchHistoricalStudentsFromMarks,
   generateReportCardForClassSection
 } from './Api';
 import './style.css';
@@ -27,6 +28,7 @@ export default function Marks() {
   const [subjectId, setSubjectId] = useState('');
   const [examTypeId, setExamTypeId] = useState('');
   const [termId, setTermId] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
 
   const [students, setStudents] = useState([]);
   const [marks, setMarks] = useState({});
@@ -90,20 +92,68 @@ useEffect(() => {
 
 
 
-  // Fetch students based on class and section
-  useEffect(() => {
-    if (classId && sectionId) {
-      setLoading(true);
-      fetchStudents(classId, sectionId)
-        .then(data => {
-          const sorted = [...data].sort((a, b) => a.rollNumber - b.rollNumber);
-          setStudents(sorted);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setStudents([]);
-    }
-  }, [classId, sectionId]);
+ useEffect(() => {
+   async function loadStudents() {
+     setLoading(true);
+
+     try {
+
+       // FIRST try student table
+       const currentStudents = await fetchStudents(
+         classId,
+         sectionId,
+         academicYear
+       );
+       if (currentStudents && currentStudents.length > 0) {
+
+         const sorted = [...currentStudents].sort(
+           (a, b) => a.rollNumber - b.rollNumber
+         );
+
+         setStudents(sorted);
+
+       } else {
+
+         // FALLBACK to marks table
+         const marksData = await fetchHistoricalStudentsFromMarks(
+           classId,
+           sectionId,
+           academicYear
+         );
+
+         // extract unique students
+         const uniqueStudentsMap = {};
+
+         marksData.forEach(m => {
+           if (m.student) {
+             uniqueStudentsMap[m.student.id] = m.student;
+           }
+         });
+
+         const historicalStudents = Object.values(uniqueStudentsMap);
+
+         const sorted = historicalStudents.sort(
+           (a, b) => (a.rollNumber || 0) - (b.rollNumber || 0)
+         );
+
+         setStudents(sorted);
+       }
+
+     } catch (err) {
+       console.error(err);
+       setStudents([]);
+     } finally {
+       setLoading(false);
+     }
+   }
+
+   if (classId && sectionId && academicYear) {
+     loadStudents();
+   } else {
+     setStudents([]);
+   }
+
+ }, [classId, sectionId, academicYear]);
 
   // Reset marks if subject, exam type, or term is cleared
   useEffect(() => {
@@ -113,41 +163,61 @@ useEffect(() => {
   }, [subjectId, examTypeId, termId]);
 
   // Load marks for selected students
-  useEffect(() => {
-    async function loadMarks() {
-      const marksData = {};
-      let detectedTotal = '';
+useEffect(() => {
+  async function loadMarks() {
+    const marksData = {};
+    let detectedTotal = '';
 
-      for (const student of students) {
-        const ms = await fetchMarksByStudent(student.id);
-        ms.forEach(m => {
-          if (
-            m.subject.id === parseInt(subjectId) &&
-            m.examType.id === parseInt(examTypeId) &&
-            m.term.id === parseInt(termId) &&
-            m.classId === parseInt(classId) &&
-            m.sectionId === parseInt(sectionId)
-          ) {
-            marksData[student.id] = m;
-            if (detectedTotal === '' && m.totalMarks !== undefined) {
-              detectedTotal = m.totalMarks;
-            }
+    for (const student of students) {
+      const ms = await fetchMarksByStudent(student.id, academicYear);
+
+      ms.forEach(m => {
+        if (
+          m.subject.id === parseInt(subjectId) &&
+          m.examType.id === parseInt(examTypeId) &&
+          m.term.id === parseInt(termId) &&
+          m.classId === parseInt(classId) &&
+          m.sectionId === parseInt(sectionId) &&
+          m.academicYear === academicYear
+        ) {
+          marksData[student.id] = m;
+
+          if (detectedTotal === '' && m.totalMarks !== undefined) {
+            detectedTotal = m.totalMarks;
           }
-        });
-      }
-
-      setMarks(marksData);
-      if (detectedTotal !== '') {
-        setSharedTotalMarks(detectedTotal);
-      }
+        }
+      });
     }
 
-    if (students.length > 0 && subjectId && examTypeId && termId && classId && sectionId) {
-      loadMarks();
-    } else {
-      setMarks({});
+    setMarks(marksData);
+
+    if (detectedTotal !== '') {
+      setSharedTotalMarks(detectedTotal);
     }
-  }, [students, subjectId, examTypeId, termId, classId, sectionId]);
+  }
+
+  if (
+    students.length > 0 &&
+    subjectId &&
+    examTypeId &&
+    termId &&
+    classId &&
+    sectionId &&
+    academicYear
+  ) {
+    loadMarks();
+  } else {
+    setMarks({});
+  }
+}, [
+  students,
+  subjectId,
+  examTypeId,
+  termId,
+  classId,
+  sectionId,
+  academicYear
+]);
 
   // Determine if user can edit
   const editable = (() => {
@@ -179,7 +249,7 @@ useEffect(() => {
           sectionId: parseInt(sectionId),
           marksObtained: '',
           absent: false,
-          academicYear: new Date().getFullYear().toString()
+          academicYear: academicYear
         };
 
         updated[student.id] = {
@@ -207,7 +277,7 @@ useEffect(() => {
         totalMarks: sharedTotalMarks,
         marksObtained: '',
         absent: false,
-        academicYear: new Date().getFullYear().toString()
+        academicYear: academicYear
       };
       const updated = { ...existing, [field]: sanitized };
       return { ...prev, [studentId]: updated };
@@ -229,7 +299,7 @@ useEffect(() => {
         sectionId: parseInt(sectionId),
         totalMarks: sharedTotalMarks,
         marksObtained: '',
-        academicYear: new Date().getFullYear().toString()
+        academicYear: academicYear
       };
 
       return {
@@ -284,8 +354,7 @@ useEffect(() => {
 
     await Promise.all(marksToSave.map(m => saveMark(m)));
 
-    await generateReportCardForClassSection(classId, sectionId, students);
-
+    await generateReportCardForClassSection(classId,sectionId,students,academicYear);
     alert('Marks saved successfully!');
   }
 
@@ -297,6 +366,12 @@ useEffect(() => {
 
         <Dropdown label="Class" options={classes} value={classId} onChange={setClassId} />
         <Dropdown label="Section" options={sections} value={sectionId} onChange={setSectionId} />
+        <input
+          type="text"
+          placeholder="Academic Year (2025-2026)"
+          value={academicYear}
+          onChange={(e) => setAcademicYear(e.target.value)}
+        />
         <Dropdown label="Subject" options={subjects} value={subjectId} onChange={setSubjectId} />
         <Dropdown label="Exam Type" options={examTypes} value={examTypeId} onChange={setExamTypeId} />
         <Dropdown label="Term" options={terms} value={termId} onChange={setTermId} disabled={isPreboard} />

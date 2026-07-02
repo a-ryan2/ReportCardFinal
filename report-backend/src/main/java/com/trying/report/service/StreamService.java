@@ -17,6 +17,12 @@ public class StreamService {
         return streamRepository.findAll();
     }
 
+    // ✅ ADD THIS
+    public Stream findById(Long id) {
+        return streamRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Stream not found"));
+    }
+
     public Stream save(Stream stream) {
         if (stream.getName() == null || stream.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Stream name cannot be empty.");

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "co_scholastic_marks")
+@Table(name = "co_scholastic_marks", uniqueConstraints = @UniqueConstraint(columnNames = {"student_id", "term_id", "academic_year", "class_id", "section_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,6 +39,12 @@ public class CoScholasticMark {
 
     @Column(length = 20, nullable = false)
     private String academicYear;
+
+    @Column(name = "class_id", nullable = false)
+    private Long classId;
+
+    @Column(name = "section_id", nullable = false)
+    private Long sectionId;
 
     private String gk;
     private String computer;

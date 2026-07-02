@@ -8,10 +8,9 @@ export async function login(username, password) {
     const res = await axios.post(`${API_BASE}/auth/login`, { username, password });
     const data = res.data;
     if (data) {
-      // Save user details in local storage
       localStorage.setItem("currentUser", JSON.stringify({
         username: data.username,
-        role: typeof data.role === "string" ? data.role : data.role?.name, // <--- FIX
+        role: typeof data.role === "string" ? data.role : data.role?.name,
         id: data.id
       }));
     }
@@ -25,7 +24,6 @@ export async function login(username, password) {
     }
   }
 }
-
 
 /* -------------------- CLASSES -------------------- */
 export async function fetchClasses() {
@@ -68,7 +66,6 @@ export async function fetchSections() {
   }
 }
 
-
 export async function saveSection(section) {
   try {
     const res = await axios.post(`${API_BASE}/sections`, section);
@@ -89,8 +86,18 @@ export async function deleteSection(id) {
 }
 
 /* -------------------- STUDENTS -------------------- */
-export async function fetchStudents(classId, sectionId) {
-  const res = await axios.get(`${API_BASE}/students`, { params: { classId, sectionId } });
+export async function fetchStudents(classId, sectionId, academicYear, streamId) {
+  const params = {
+    classId,
+    sectionId,
+    academicYear
+  };
+
+  if (streamId) {
+    params.streamId = streamId;
+  }
+
+  const res = await axios.get(`${API_BASE}/students`, { params });
   return res.data;
 }
 
@@ -104,10 +111,11 @@ export async function deleteStudent(id) {
 }
 
 /* -------------------- ATTENDANCE -------------------- */
-export async function fetchAttendance(start, end, classId, sectionId) {
+export async function fetchAttendance(start, end, classId, sectionId, academicYear) {
   const res = await axios.get(`${API_BASE}/attendance`, {
-    params: { start, end, classId, sectionId },
+    params: { start, end, classId, sectionId, academicYear },
   });
+
   return res.data;
 }
 
@@ -117,14 +125,71 @@ export async function saveAttendance(attendance) {
 }
 
 /* -------------------- MARKS -------------------- */
-export async function fetchMarksByStudent(studentId) {
-  const res = await axios.get(`${API_BASE}/marks/student/${studentId}`);
+export async function fetchMarksByStudent(studentId, academicYear) {
+  const res = await axios.get(`${API_BASE}/marks/student/${studentId}`, {
+    params: { academicYear }
+  });
+
   return res.data;
+}
+
+export async function fetchHistoricalStudentsFromMarks(
+  classId,
+  sectionId,
+  academicYear
+) {
+  try {
+    const res = await axios.get(
+      `${API_BASE}/marks/class/${classId}/section/${sectionId}/academicYear/${academicYear}`
+    );
+    debugger;
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching historical students:", error);
+    return [];
+  }
+}
+
+export async function fetchHistoricalStudentsFromCoScholastic(
+  classId,
+  sectionId,
+  termId,
+  academicYear
+) {
+  try {
+    const res = await axios.get(
+      `${API_BASE}/co-scholastic/class/${classId}/section/${sectionId}/term/${termId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
+    return res.data.map(r => r.student);
+  } catch (error) {
+    console.error("Error fetching historical co-scholastic students:", error);
+    return [];
+  }
 }
 
 export async function saveMark(mark) {
   const res = await axios.post(`${API_BASE}/marks`, mark);
   return res.data;
+}
+
+export async function fetchMarksByClassSection(classId, sectionId, academicYear) {
+  try {
+    const res = await axios.get(
+      `${API_BASE}/marks/class/${classId}/section/${sectionId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching class marks:", error);
+    return [];
+  }
 }
 
 /* -------------------- EXAM TYPES -------------------- */
@@ -137,6 +202,7 @@ export async function fetchExamTypes() {
     throw error;
   }
 }
+
 /* -------------------- TERMS -------------------- */
 export async function fetchTerms() {
   try {
@@ -154,9 +220,9 @@ export async function fetchSubjects() {
     const res = await axios.get(`${API_BASE}/subjects`);
     return res.data;
   } catch (error) {
-       console.error("Error fetching subjects:", error);
-       throw error;
-     }
+    console.error("Error fetching subjects:", error);
+    throw error;
+  }
 }
 
 /* -------------------- HOLIDAYS -------------------- */
@@ -165,6 +231,7 @@ export async function fetchHolidays(start, end) {
     const res = await axios.get(`${API_BASE}/holidays/range`, {
       params: { start, end },
     });
+
     return res.data;
   } catch (error) {
     console.error("Error fetching holidays:", error);
@@ -172,11 +239,10 @@ export async function fetchHolidays(start, end) {
   }
 }
 
-// ✅ Fix holiday save/update
 export async function saveHoliday(holiday) {
   const url = holiday.id
-    ? `${API_BASE}/holidays/${holiday.id}` // PUT (update)
-    : `${API_BASE}/holidays`;              // POST (create)
+    ? `${API_BASE}/holidays/${holiday.id}`
+    : `${API_BASE}/holidays`;
 
   const method = holiday.id ? "PUT" : "POST";
 
@@ -186,14 +252,13 @@ export async function saveHoliday(holiday) {
       url,
       data: holiday,
     });
+
     return res.data;
   } catch (error) {
     console.error("Error saving holiday:", error);
     throw error;
   }
 }
-
-
 
 export async function deleteHoliday(id) {
   try {
@@ -203,7 +268,6 @@ export async function deleteHoliday(id) {
     throw error;
   }
 }
-
 
 /* -------------------- USERS -------------------- */
 export async function fetchUsers() {
@@ -235,8 +299,7 @@ export async function fetchRoles() {
   }
 }
 
-// Class admin
-// Fetch all class-admin assignments
+/* -------------------- CLASS ADMIN -------------------- */
 export async function fetchClassAdmins() {
   try {
     const res = await axios.get(`${API_BASE}/class-admin`);
@@ -247,7 +310,6 @@ export async function fetchClassAdmins() {
   }
 }
 
-// Fetch class-admin by ID
 export async function fetchClassAdminById(id) {
   try {
     const res = await axios.get(`${API_BASE}/class-admin/${id}`);
@@ -258,26 +320,22 @@ export async function fetchClassAdminById(id) {
   }
 }
 
-// Fetch class-admin by User ID
 export async function fetchClassAdminByUserId(id) {
   try {
     const res = await axios.get(`${API_BASE}/class-admin/user/${id}`);
     return res.data;
   } catch (error) {
     console.error(`Error fetching class admin ${id}:`, error);
-    return [];;
+    return [];
   }
 }
 
-// Save or update class-admin assignment
 export async function saveClassAdmin(payload) {
   try {
     if (payload.id) {
-      // Update
       const res = await axios.put(`${API_BASE}/class-admin/${payload.id}`, payload);
       return { success: true, data: res.data };
     } else {
-      // Create
       const res = await axios.post(`${API_BASE}/class-admin`, payload);
       return { success: true, data: res.data };
     }
@@ -287,7 +345,6 @@ export async function saveClassAdmin(payload) {
   }
 }
 
-// Delete class-admin assignment
 export async function deleteClassAdmin(id) {
   try {
     await axios.delete(`${API_BASE}/class-admin/${id}`);
@@ -298,7 +355,6 @@ export async function deleteClassAdmin(id) {
   }
 }
 
-// Assign class-admin (shortcut for creating)
 export async function assignClassAdmin(payload) {
   try {
     const res = await axios.post(`${API_BASE}/class-admin`, payload);
@@ -311,9 +367,15 @@ export async function assignClassAdmin(payload) {
 
 /* -------------------- CO-SCHOLASTIC MARKS -------------------- */
 
-export async function fetchCoScholasticMarksByStudentTerm(studentId, termId) {
+export async function fetchCoScholasticMarksByStudentTerm(studentId, termId, academicYear) {
   try {
-    const res = await axios.get(`${API_BASE}/co-scholastic/student/${studentId}/term/${termId}`);
+    const res = await axios.get(
+      `${API_BASE}/co-scholastic/student/${studentId}/term/${termId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
     return res.data;
   } catch (error) {
     console.error("Error fetching co-scholastic marks:", error);
@@ -321,11 +383,17 @@ export async function fetchCoScholasticMarksByStudentTerm(studentId, termId) {
   }
 }
 
-// Fetch co-scholastic marks for a student and term for report crad
-export async function fetchCoScholasticMarksByStudentTermForReportCard(studentId, termId) {
+export async function fetchCoScholasticMarksByStudentTermForReportCard(studentId, termId, academicYear) {
   try {
-    const res = await axios.get(`${API_BASE}/co-scholastic/student/${studentId}/term/${termId}`);
+    const res = await axios.get(
+      `${API_BASE}/co-scholastic/student/${studentId}/term/${termId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
     const coMarks = (res.data && res.data[0]) || {};
+
     return {
       artEducation: coMarks.artEducation || '',
       workEducation: coMarks.workEducation || '',
@@ -349,12 +417,20 @@ export async function fetchCoScholasticMarksByStudentTermForReportCard(studentId
   }
 }
 
-
-
-// Fetch all co-scholastic marks for a class, section, and term
-export async function fetchCoScholasticMarksByClassSectionTerm(classId, sectionId, termId) {
+export async function fetchCoScholasticMarksByClassSectionTerm(
+  classId,
+  sectionId,
+  termId,
+  academicYear
+) {
   try {
-    const res = await axios.get(`${API_BASE}/co-scholastic/class/${classId}/section/${sectionId}/term/${termId}`);
+    const res = await axios.get(
+      `${API_BASE}/co-scholastic/class/${classId}/section/${sectionId}/term/${termId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
     return res.data;
   } catch (error) {
     console.error("Error fetching co-scholastic marks for class/section:", error);
@@ -362,10 +438,18 @@ export async function fetchCoScholasticMarksByClassSectionTerm(classId, sectionI
   }
 }
 
-// Save a co-scholastic mark
 export async function saveCoScholasticMarks(mark) {
   try {
-    const res = await axios.post(`${API_BASE}/co-scholastic`, mark);
+    const payload = {
+      ...mark,
+      academicYear: mark.academicYear,
+      classId: mark.classId,
+      sectionId: mark.sectionId
+    };
+
+    console.log("Payload:", payload);
+    const res = await axios.post(`${API_BASE}/co-scholastic`, payload);
+
     return res.data;
   } catch (error) {
     console.error("Error saving co-scholastic mark:", error);
@@ -373,10 +457,19 @@ export async function saveCoScholasticMarks(mark) {
   }
 }
 
-// Fetch scholastic marks by student and format for Template1 with correct calculations
-export async function fetchMarksByStudentForReportCard(studentId, classNumber) {
+export async function fetchMarksByStudentForReportCard(
+  studentId,
+  classNumber,
+  academicYear
+) {
   try {
-    const res = await axios.get(`${API_BASE}/marks/student/${studentId}`);
+    const res = await axios.get(
+      `${API_BASE}/marks/student/${studentId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
     const marksData = res.data || [];
     const examWeight = classNumber <= 4 ? 30 : 80;
     const subjectMap = {};
@@ -385,42 +478,40 @@ export async function fetchMarksByStudentForReportCard(studentId, classNumber) {
       const subjectName = m.subject?.name?.toUpperCase() || "UNKNOWN";
       const termName = m.term?.name?.toLowerCase() || "";
       const termNumber = termName.includes("2") ? "2" : "1";
-      const examType = m.examType?.name?.toUpperCase() || ""; // e.g. PT1, NOTEBOOK, TERM
+      const examType = m.examType?.name?.toUpperCase() || "";
       const marksObtained = Number(m.marksObtained) || 0;
       const totalMarks = Number(m.totalMarks) || 0;
 
-      // Create if doesn't exist
       if (!subjectMap[subjectName]) {
         subjectMap[subjectName] = {
           subjectName,
-          // Term 1
+
           pt1: 0,
           noteBookT1: 0,
           subEnrichmentT1: 0,
           term1Marks: 0,
           marksObtainedT1: 0,
           gradeT1: "",
-          // Term 2
+
           pt2: 0,
           noteBookT2: 0,
           subEnrichmentT2: 0,
           term2Marks: 0,
           marksObtainedT2: 0,
           gradeT2: "",
-          // Final total
+
           total: 0,
           overallGrade: ""
         };
       }
 
-      // Scale marks to standard weightage
       const scaleMarks = (obt, total, weight) => {
         if (total <= 0) return 0;
+
         const scaled = (obt / total) * weight;
         return parseFloat(scaled.toFixed(2));
       };
 
-      // Assign marks to correct term/component
       if (termNumber === "1") {
         if (examType.includes("PT")) {
           subjectMap[subjectName].pt1 = scaleMarks(marksObtained, totalMarks, 10);
@@ -444,24 +535,33 @@ export async function fetchMarksByStudentForReportCard(studentId, classNumber) {
       }
     });
 
-    // Compute totals and grades
     Object.values(subjectMap).forEach((sub) => {
       const termMax = classNumber <= 4 ? 50 : 100;
-      // Term 1 out of 50
-      const t1Score = sub.pt1 + sub.noteBookT1 + sub.subEnrichmentT1 + sub.term1Marks;
+
+      const t1Score =
+        sub.pt1 +
+        sub.noteBookT1 +
+        sub.subEnrichmentT1 +
+        sub.term1Marks;
+
       sub.marksObtainedT1 = parseFloat(t1Score.toFixed(2));
       sub.gradeT1 = calculateGradeFromPercent((t1Score / termMax) * 100);
 
-      // Term 2 out of 50
+      const t2Score =
+        sub.pt2 +
+        sub.noteBookT2 +
+        sub.subEnrichmentT2 +
+        sub.term2Marks;
 
-      const t2Score = sub.pt2 + sub.noteBookT2 + sub.subEnrichmentT2 + sub.term2Marks;
       sub.marksObtainedT2 = parseFloat(t2Score.toFixed(2));
       sub.gradeT2 = calculateGradeFromPercent((t2Score / termMax) * 100);
 
-      // Total (out of 100)
       const total = t1Score + t2Score;
+
       sub.total = parseFloat(total.toFixed(2));
-      sub.overallGrade = calculateGradeFromPercent(total);
+
+      const yearlyPercent = classNumber <= 4 ? total : (total / 200) * 100;
+      sub.overallGrade = calculateGradeFromPercent(yearlyPercent);
     });
 
     return Object.values(subjectMap);
@@ -471,10 +571,15 @@ export async function fetchMarksByStudentForReportCard(studentId, classNumber) {
   }
 }
 
-// Fetch scholastic marks for Template3 & Template4 (Senior Classes)
-export async function fetchMarksByStudentForSeniorReportCard(studentId) {
+export async function fetchMarksByStudentForSeniorReportCard(studentId, academicYear) {
   try {
-    const res = await axios.get(`${API_BASE}/marks/student/${studentId}`);
+    const res = await axios.get(
+      `${API_BASE}/marks/student/${studentId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
     const marksData = res.data || [];
     const subjectMap = {};
 
@@ -491,7 +596,6 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId) {
     };
 
     marksData.forEach((m) => {
-
       const subjectName = m.subject?.name?.toUpperCase() || "UNKNOWN";
       const termName = m.term?.name?.toLowerCase() || "";
       const termNumber = termName.includes("2") ? "2" : "1";
@@ -527,35 +631,41 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId) {
 
       if (termNumber === "1") {
         if (examType.includes("PT")) {
-            subject.pt1Actual = marksObtained;
-            subject.convPt1 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
+          subject.pt1Actual = marksObtained;
+          subject.convPt1 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
         } else if (examType.includes("HALF")) {
-             subject.halfYearlyActual = marksObtained;
-             subject.convHalfYearly = parseFloat(((marksObtained / totalMarks) * 20).toFixed(2));
+          subject.halfYearlyActual = marksObtained;
+          subject.convHalfYearly = parseFloat(((marksObtained / totalMarks) * 20).toFixed(2));
         }
       } else if (termNumber === "2") {
         if (examType.includes("PT")) {
-                subject.pt2Actual = marksObtained;
-                subject.convPt2 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
+          subject.pt2Actual = marksObtained;
+          subject.convPt2 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
         } else if (examType.includes("HALF")) {
-                subject.annualActual = marksObtained;
-                subject.convAnnual = convertTheory(marksObtained, totalMarks);
+          subject.annualActual = marksObtained;
+          subject.convAnnual = convertTheory(marksObtained, totalMarks);
         }
       }
+
       if (examType.includes("PRE") && examType.includes("1")) {
-              subject.preBoard1Actual = marksObtained;
-              const converted = convertTheory(marksObtained, totalMarks);
-              subject.convPreboardBest = Math.max(subject.convPreboardBest, converted);
-            }
+        subject.preBoard1Actual = marksObtained;
 
-            else if (examType.includes("PRE") && examType.includes("2")) {
-              subject.preBoard2Actual = marksObtained;
+        const converted = convertTheory(marksObtained, totalMarks);
 
-              const converted = convertTheory(marksObtained, totalMarks);
-              subject.convPreboardBest = Math.max(subject.convPreboardBest, converted);
-            }
+        subject.convPreboardBest = Math.max(
+          subject.convPreboardBest,
+          converted
+        );
+      } else if (examType.includes("PRE") && examType.includes("2")) {
+        subject.preBoard2Actual = marksObtained;
 
-      else if (
+        const converted = convertTheory(marksObtained, totalMarks);
+
+        subject.convPreboardBest = Math.max(
+          subject.convPreboardBest,
+          converted
+        );
+      } else if (
         examType.includes("PRACTICAL") ||
         examType.includes("PROJECT") ||
         examType.includes("ASL")
@@ -592,7 +702,6 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId) {
   }
 }
 
-// Grade calculation based on your scale
 function calculateGradeFromPercent(percent) {
   const p = parseFloat(percent.toFixed(2));
   if (p >= 91) return "A1";
@@ -602,24 +711,33 @@ function calculateGradeFromPercent(percent) {
   if (p >= 51) return "C1";
   if (p >= 41) return "C2";
   if (p >= 33) return "D";
+
   return "E";
 }
 
-
-/* -------------------- REPORT CARD Table Record generation to calculate rank -------------------- */
-export async function generateReportCardForClassSection(classId, sectionId, students) {
+/* -------------------- REPORT CARD -------------------- */
+export async function generateReportCardForClassSection(
+  classId,
+  sectionId,
+  students,
+  academicYear
+) {
   try {
     for (const student of students) {
-      const res = await axios.get(`${API_BASE}/marks/student/${student.id}`);
+      const res = await axios.get(
+        `${API_BASE}/marks/student/${student.id}`,
+        {
+          params: { academicYear }
+        }
+      );
+
       const marksData = res.data || [];
 
-      // Always assume both terms exist (each out of 50)
       let term1Obt = 0;
       let term2Obt = 0;
 
-      const calculateScaled = (obt, total, weight) => (total > 0 ? (obt / total) * weight : 0);
+      const calculateScaled = (obt, total, weight) => total > 0 ? (obt / total) * weight : 0;
 
-      // Loop through available marks
       marksData.forEach((m) => {
         const examType = m.examType?.name?.toUpperCase() || '';
         const termName = m.term?.name?.toLowerCase() || '';
@@ -628,31 +746,39 @@ export async function generateReportCardForClassSection(classId, sectionId, stud
         const max = Number(m.totalMarks) || 0;
 
         let scaled = 0;
-        if (examType.includes('PT')) scaled = calculateScaled(obt, max, 10);
-        else if (examType.includes('NOTEBOOK')) scaled = calculateScaled(obt, max, 5);
-        else if (examType.includes('SUB ENRICHMENT')) scaled = calculateScaled(obt, max, 5);
-        else if (examType.includes('HALF YEARLY / ANNUAL')) scaled = calculateScaled(obt, max, 30);
 
-        if (termNum === '1') term1Obt += scaled;
-        else term2Obt += scaled;
+        if (examType.includes('PT')) {
+          scaled = calculateScaled(obt, max, 10);
+        } else if (examType.includes('NOTEBOOK')) {
+          scaled = calculateScaled(obt, max, 5);
+        } else if (examType.includes('SUB ENRICHMENT')) {
+          scaled = calculateScaled(obt, max, 5);
+        } else if (examType.includes('HALF YEARLY / ANNUAL')) {
+          scaled = calculateScaled(obt, max, 30);
+        }
+
+        if (termNum === '1') {
+          term1Obt += scaled;
+        } else {
+          term2Obt += scaled;
+        }
       });
 
-      // ✅ Each term is out of 50, even if some marks are missing
       const totalObtained = term1Obt + term2Obt;
-      const totalMax = 100; // Always fixed (Term 1 + Term 2)
+      const totalMax = 100;
       const percentage = (totalObtained / totalMax) * 100;
 
       const reportCard = {
         studentId: student.id,
         classId: parseInt(classId),
         sectionId: parseInt(sectionId),
+        academicYear,
         totalMarks: Math.round(totalObtained),
         maxMarks: totalMax,
         percentage: parseFloat(percentage.toFixed(2)),
         totalAttendance: 0
       };
 
-      // ✅ Create or update report card
       await axios.post(`${API_BASE}/report-cards`, reportCard);
     }
 
@@ -661,15 +787,18 @@ export async function generateReportCardForClassSection(classId, sectionId, stud
     console.error("❌ Error generating report cards:", error);
     throw error;
   }
-
 }
 
-
-// Fetch report card for a student (includes rank, total marks, percentage, etc.)
-export const fetchReportCardByStudent = async (studentId) => {
+export const fetchReportCardByStudent = async (studentId, academicYear) => {
   try {
-    const response = await axios.get(`${API_BASE}/report-cards/student/${studentId}`);
-    return response.data; // returns the report card object
+    const response = await axios.get(
+      `${API_BASE}/report-cards/student/${studentId}`,
+      {
+        params: { academicYear }
+      }
+    );
+
+    return response.data;
   } catch (error) {
     console.error('Error fetching report card:', error);
     return null;
@@ -681,5 +810,3 @@ export async function fetchStreams() {
   if (!res.ok) throw new Error('Failed to fetch streams');
   return res.json();
 }
-
-

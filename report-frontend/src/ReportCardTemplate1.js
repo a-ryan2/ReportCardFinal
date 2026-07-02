@@ -78,7 +78,7 @@ function ReportCardTemplate1({
       <div className="student-info-grid">
         <div><span>Name:</span> <b>{student.firstName} {student.lastName}</b></div>
         <div><span>Roll No:</span> <b>{student.rollNumber}</b></div>
-        <div><span>Class & Section:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
+        <div><span>Class & Section:</span> <b>{student.className} - {student.sectionName}</b></div>
         <div><span>SRN:</span> <b>{student.srn}</b></div>
         <div><span>Admission No:</span> <b>{student.admissionNo}</b></div>
         <div><span>Father&apos;s Name:</span> <b>{student.fatherName}</b></div>
@@ -146,7 +146,7 @@ function ReportCardTemplate1({
                 : subMarks.gradeT2 || "";
 
               // Round marks for display only
-              const totalMarks = subMarks.total !== undefined ? Math.round(subMarks.total) : "";
+              const totalMarks = subMarks.total == null ? "" : Math.round(subMarks.total);
 
               return (
                 <tr key={i}>

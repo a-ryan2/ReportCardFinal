@@ -52,7 +52,7 @@ const getStudentStream = (student) => {
 
   const stream = getStudentStream(student);
 
-  const classNo = parseInt(student?.classEntity?.name);
+  const classNo = parseInt(student?.className);
 
   // subject sets
   const getCoreSubjectsForStream = () => {
@@ -119,9 +119,20 @@ const getStudentStream = (student) => {
   const renderSubjectRow = (sub, keyPrefix) => {
     const m = getSubjectMarks(sub);
 
-    const totalMarks100 =
-      m.totalMarks100 ??
-      ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0));
+    const hasMarks =
+        m.totalMarks100 != null ||
+        m.convTheory != null ||
+        m.convPractical != null ||
+        m.convOther != null;
+
+    const totalMarks100 = hasMarks
+        ? (
+            m.totalMarks100 ??
+            ((m.convTheory ?? 0) +
+             (m.convPractical ?? 0) +
+             (m.convOther ?? 0))
+          )
+        : "";
 
     return (
       <tr key={keyPrefix + sub}>
@@ -181,7 +192,7 @@ const getStudentStream = (student) => {
         <div>
           <span>Class & Section:</span>{" "}
           <b>
-            {student?.classEntity?.name} - {student?.section?.name}
+            {student?.className} - {student?.sectionName}
           </b>
         </div>
         <div>

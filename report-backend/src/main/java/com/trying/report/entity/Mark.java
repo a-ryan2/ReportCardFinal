@@ -50,7 +50,7 @@ public class Mark {
     @Column(nullable = false, length = 20)
     private String academicYear;
 
-    // These are stored as plain IDs (no foreign key)
+    // These are stored as historical values
     @Column(name = "class_id", nullable = false)
     private Long classId;
 

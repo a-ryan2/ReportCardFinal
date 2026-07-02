@@ -27,7 +27,7 @@ public class Student {
     @Column(nullable = false, unique = true)
     private String admissionNo;
 
-    @Column(nullable = false)   
+    @Column(nullable = false)
     private String rollNumber;
 
     @Column(nullable = false)
@@ -48,6 +48,10 @@ public class Student {
     @ManyToOne
     @JoinColumn(name = "stream_id", nullable = true)
     private Stream stream;
+
+    // ✅ Current Academic Year
+    @Column(name = "academic_year", nullable = false)
+    private String academicYear;
 
     private LocalDate dateOfBirth;
 }

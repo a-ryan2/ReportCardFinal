@@ -16,6 +16,7 @@ export default function Attendance() {
   const [sections, setSections] = useState([]);
   const [classId, setClassId] = useState('');
   const [sectionId, setSectionId] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
   const [students, setStudents] = useState([]);
   const [attendance, setAttendance] = useState({});
   const [holidays, setHolidays] = useState({});
@@ -80,16 +81,16 @@ export default function Attendance() {
   }, [currentStart, classId]);
 
   useEffect(() => {
-    if (classId && sectionId) {
+    if (classId && sectionId && academicYear) {
       setLoading(true);
-      fetchStudents(classId, sectionId)
+      fetchStudents(classId, sectionId, academicYear)
         .then(setStudents)
         .finally(() => setLoading(false));
       fetchWeekAttendance();
     } else {
       setStudents([]);
     }
-  }, [classId, sectionId, currentStart]);
+  }, [classId, sectionId, academicYear, currentStart]);
 
   useEffect(() => {
     window.scrollTo(0, scrollRef.current);
@@ -227,6 +228,13 @@ export default function Attendance() {
         <h2>Attendance</h2>
         <Dropdown label="Class" options={classes} value={classId} onChange={setClassId} />
         <Dropdown label="Section" options={sections} value={sectionId} onChange={setSectionId} />
+
+        <input
+          type="text"
+          placeholder="Academic Year (2025-2026)"
+          value={academicYear}
+          onChange={(e) => setAcademicYear(e.target.value)}
+        />
 
         <div className="week-navigation">
           <button type="button" onClick={() => changeWeek(-1)}>Previous Week</button>

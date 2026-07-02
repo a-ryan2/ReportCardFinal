@@ -21,7 +21,7 @@ function ReportCardTemplate2({
     return parseFloat(num.toFixed(2));
   };
 
-  const classNo = parseInt(student?.classEntity?.name);
+  const classNo = parseInt(student?.className);
 
  const subjects =
    classNo === 5
@@ -42,6 +42,7 @@ function ReportCardTemplate2({
          "MATHEMATICS",
          "SST",
          "SCIENCE",
+         "SANSKRIT",
          "Optional sub",
          "COMPUTER"
        ]
@@ -127,7 +128,7 @@ function ReportCardTemplate2({
       <div className="student-info-grid">
         <div><span>Name:</span> <b>{student.firstName} {student.lastName}</b></div>
         <div><span>Roll No:</span> <b>{student.rollNumber}</b></div>
-        <div><span>Class & Section:</span> <b>{student.classEntity?.name} - {student.section?.name}</b></div>
+        <div><span>Class & Section:</span> <b>{student.className} - {student.sectionName}</b></div>
         <div><span>SRN:</span> <b>{student.srn}</b></div>
         <div><span>Admission No:</span> <b>{student.admissionNo}</b></div>
         <div><span>Father&apos;s Name:</span> <b>{student.fatherName}</b></div>
@@ -190,7 +191,7 @@ function ReportCardTemplate2({
                   <td>{formatMarks(subMarks.term2Marks)}</td>
                   <td>{formatMarks(subMarks.marksObtainedT2)}</td>
                   <td>{subMarks.gradeT2 || ""}</td>
-                  <td>{formatMarks(subMarks.total/2)}</td>
+                  <td>{subMarks.total == null ? "" : formatMarks(subMarks.total / 2)}</td>
                   <td>{subMarks.overallGrade || ""}</td>
                 </tr>
               );
@@ -203,7 +204,7 @@ function ReportCardTemplate2({
               <td colSpan="4"></td>
               <td>{formatMarks(totalMarksT2)}</td>
               <td></td>
-              <td>{formatMarks(overallMarksTotal/2)}</td>
+              <td>{formatMarks(((overallMarksTotal || 0) / 2))}</td>
               <td></td>
             </tr>
           </tbody>

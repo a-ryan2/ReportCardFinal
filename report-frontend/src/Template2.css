@@ -1,7 +1,7 @@
 .template2-report-card {
   max-width: 1150px;
-  margin: 10px auto;
-  padding: 12px 20px;
+  margin: 4px auto;
+  padding: 8px 16px;
   background: #fff;
   border: 2px solid #8f72a1;
   font-family: Arial, sans-serif;
@@ -12,13 +12,13 @@
 /* HEADER */
 .school-title {
   text-align: center;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 900;
   color: #5b3783;
   text-transform: uppercase;
   letter-spacing: 1px;
   border-bottom: 2px solid #7a57bc;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   font-family: "Georgia", serif;
 }
 
@@ -26,7 +26,7 @@
   display: flex;
   justify-content: center;
   gap: 32px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   font-size: 12.5px;
   font-weight: 600;
   color: #374151;
@@ -75,8 +75,8 @@ th, td {
 
 /* CO-SCHOLASTIC */
 .coscholastic-table {
-  margin-top: 8px;
-  margin-bottom: 8px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 .coscholastic-table th {
   background: #ece7f6;
@@ -94,7 +94,7 @@ th, td {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 .discipline-table {
   flex: 0 0 46%;
@@ -136,9 +136,9 @@ th, td {
 .signature-fields {
   display: flex;
   justify-content: space-evenly;
-  margin-top: 10px;
+  margin-top: 5px;
   border-top: 1px solid #000;
-  padding-top: 5px;
+  padding-top: 3px;
   font-weight: 600;
   font-size: 10.5px;
   text-align: center;

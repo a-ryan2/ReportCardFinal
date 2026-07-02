@@ -7,6 +7,7 @@ import {
   fetchTerms,
   fetchCoScholasticMarksByStudentTerm,
   saveCoScholasticMarks,
+  fetchHistoricalStudentsFromCoScholastic,
   fetchClassAdminByUserId
 } from './Api';
 import './style.css';
@@ -19,6 +20,7 @@ export default function CoScholasticGrades() {
   const [classId, setClassId] = useState('');
   const [sectionId, setSectionId] = useState('');
   const [termId, setTermId] = useState('');
+  const [academicYear, setAcademicYear] = useState('');
 
   const [students, setStudents] = useState([]);
   const [grades, setGrades] = useState({});
@@ -48,26 +50,94 @@ export default function CoScholasticGrades() {
   }, [role, currentUser.id]);
 
   // Load students
-  useEffect(() => {
-    if (classId && sectionId) {
-      setLoading(true);
-      fetchStudents(classId, sectionId)
-        .then(data => {
-          const sorted = [...data].sort((a, b) => a.rollNumber - b.rollNumber);
-          setStudents(sorted);
-        })
-        .finally(() => setLoading(false));
-    } else {
+useEffect(() => {
+
+  async function loadStudents() {
+
+    if (!classId || !sectionId || !academicYear) {
       setStudents([]);
+      return;
     }
-  }, [classId, sectionId]);
+
+    setLoading(true);
+
+    try {
+
+      // FIRST try current students table
+      const currentStudents = await fetchStudents(
+        classId,
+        sectionId,
+        academicYear
+      );
+
+      let finalStudents = [];
+
+      if (currentStudents && currentStudents.length > 0) {
+
+        finalStudents = currentStudents;
+
+      } else if (termId) {
+
+        // FALLBACK to historical co-scholastic records
+        const historicalData =
+          await fetchHistoricalStudentsFromCoScholastic(
+            classId,
+            sectionId,
+            termId,
+            academicYear
+          );
+
+        // Remove duplicates safely
+        const uniqueStudentsMap = {};
+
+        historicalData.forEach(item => {
+
+          // Handles both:
+          // 1. direct student object
+          // 2. co-scholastic object containing student
+
+          const student = item.student || item;
+
+          if (student?.id) {
+            uniqueStudentsMap[student.id] = student;
+          }
+        });
+
+        finalStudents =
+          Object.values(uniqueStudentsMap);
+      }
+
+      // Sort by roll number
+      finalStudents.sort(
+        (a, b) =>
+          (a.rollNumber || 0) -
+          (b.rollNumber || 0)
+      );
+
+      setStudents(finalStudents);
+
+    } catch (err) {
+
+      console.error(err);
+
+      setStudents([]);
+
+    } finally {
+
+      setLoading(false);
+    }
+  }
+
+  loadStudents();
+
+}, [classId, sectionId, academicYear, termId]);
 
   // Load existing Co-Scholastic marks
   useEffect(() => {
     async function loadGrades() {
       const gradesData = {};
       for (const student of students) {
-        const marks = await fetchCoScholasticMarksByStudentTerm(student.id, termId);
+        const marks = await fetchCoScholasticMarksByStudentTerm(student.id, termId, academicYear);
         if (marks.length > 0) {
           gradesData[student.id] = marks[0];
         }
@@ -75,12 +145,12 @@ export default function CoScholasticGrades() {
       setGrades(gradesData);
     }
 
-    if (students.length > 0 && termId) {
+    if (students.length > 0 && termId && academicYear) {
       loadGrades();
     } else {
       setGrades({});
     }
-  }, [students, termId]);
+  }, [students, termId, academicYear]);
 
   // Permission logic (editable only if master admin or assigned admin)
   const editable = (() => {
@@ -100,6 +170,9 @@ export default function CoScholasticGrades() {
       const existing = prev[studentId] || {
         student: { id: studentId },
         term: { id: parseInt(termId) },
+        classId: parseInt(classId),
+        sectionId: parseInt(sectionId),
+        academicYear: academicYear,
         regularityPunctuality: '',
         sincerity: '',
         behaviourValues: '',
@@ -126,8 +199,8 @@ export default function CoScholasticGrades() {
       return;
     }
 
-    if (!classId || !sectionId || !termId) {
-      alert('Please select Class, Section, and Term before saving.');
+    if (!classId || !sectionId || !termId || !academicYear) {
+      alert('Please select Class, Section, Academic Year, and Term before saving.');
       return;
     }
 
@@ -191,6 +264,14 @@ export default function CoScholasticGrades() {
 
         <Dropdown label="Class" options={classes} value={classId} onChange={setClassId} />
         <Dropdown label="Section" options={sections} value={sectionId} onChange={setSectionId} />
+
+        <input
+          type="text"
+          placeholder="Academic Year (2025-2026)"
+          value={academicYear}
+          onChange={(e) => setAcademicYear(e.target.value)}
+        />
+
         <Dropdown label="Term" options={terms} value={termId} onChange={setTermId} />
 
         {loading ? (

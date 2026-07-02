@@ -12,8 +12,7 @@ public interface ReportCardRepository extends JpaRepository<ReportCard, Long> {
 
     Optional<ReportCard> findByStudentId(Long studentId);
 
-    Optional<ReportCard> findByStudentIdAndClassIdAndSectionIdAndAcademicYear(
-            Long studentId, Long classId, Long sectionId, String academicYear);
+    Optional<ReportCard> findByStudentIdAndClassIdAndSectionIdAndAcademicYear(Long studentId, Long classId, Long sectionId, String academicYear);
 
     List<ReportCard> findByClassIdAndSectionIdAndAcademicYear(Long classId, Long sectionId, String academicYear);
 }

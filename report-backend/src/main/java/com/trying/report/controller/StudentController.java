@@ -1,4 +1,3 @@
-
 package com.trying.report.controller;
 
 import com.trying.report.entity.Student;
@@ -24,13 +23,49 @@ public class StudentController {
     public List<Student> getStudentsByClassSectionAndOptionalStream(
             @RequestParam Long classId,
             @RequestParam Long sectionId,
+            @RequestParam String academicYear,
             @RequestParam(required = false) Long streamId) {
 
         if (streamId != null) {
-            return studentService.findByClassSectionAndStream(classId, sectionId, streamId);
+            return studentService.findByClassSectionAndStream(classId, sectionId, streamId, academicYear);
         } else {
-            return studentService.findByClassAndSection(classId, sectionId);
+            return studentService.findByClassAndSection(classId, sectionId, academicYear);
         }
+    }
+
+    @PostMapping("/promote")
+    public void promoteStudents(@RequestBody java.util.Map<String, Object> payload) {
+
+        List<Integer> ids = (List<Integer>) payload.get("studentIds");
+
+        List<Long> studentIds = ids.stream()
+                .map(Long::valueOf)
+                .toList();
+
+        Long targetClassId =
+                Long.valueOf(payload.get("targetClassId").toString());
+
+        Long targetSectionId =
+                Long.valueOf(payload.get("targetSectionId").toString());
+
+        String targetAcademicYear =
+                payload.get("targetAcademicYear").toString();
+
+        Long targetStreamId = null;
+
+        if (payload.get("targetStreamId") != null) {
+
+            targetStreamId =
+                    Long.valueOf(payload.get("targetStreamId").toString());
+        }
+
+        studentService.promoteStudents(
+                studentIds,
+                targetClassId,
+                targetSectionId,
+                targetAcademicYear,
+                targetStreamId
+        );
     }
 
     // Delete a student
