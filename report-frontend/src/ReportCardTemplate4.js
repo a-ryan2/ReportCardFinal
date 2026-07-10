@@ -8,10 +8,13 @@ function ReportCardTemplate4({
   totalPercentage,
   rank,
   academicYear,
-  stream: streamProp
+  stream: streamProp,
+  coScholastic,
+  teacherRemarks
 }) {
 
   const scholasticMarks = marks || [];
+  const coMarks = coScholastic || [];
 
 const getSubjectMarks = (subjectName) => {
   const lookupName = subjectName?.toUpperCase();
@@ -49,6 +52,21 @@ const getStudentStream = (student) => {
   if (raw.includes("commerce")) return "COMMERCE";
   // fallback (safe default)
 };
+
+  const getCoScholasticGrade = (areaName, term) => {
+    const mark = coMarks.find(
+      (c) => c.areaName === areaName && c.term === term
+    );
+    return mark ? mark.grade || "" : "";
+  };
+
+  const remarksText =
+    teacherRemarks ||
+    student?.remarks ||
+    getCoScholasticGrade("Class Teacher’s Remarks", 2) ||
+    getCoScholasticGrade("Class Teacher's Remarks", 2) ||
+    getCoScholasticGrade("Remarks", 2) ||
+    "";
 
   const stream = getStudentStream(student);
 
@@ -92,13 +110,28 @@ const getStudentStream = (student) => {
 
   // totals based on final Total Marks (100)
   // ✅ FIX: Exclude optional subjects from totals
-  const grandTotalRaw = coreSubjects.reduce((sum, sub) => {
+  const coreGrandTotalRaw = coreSubjects.reduce((sum, sub) => {
     const m = getSubjectMarks(sub);
     const total =
       m.totalMarks100 ??
       ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0));
     return sum + (total || 0);
   }, 0);
+
+  const optionalTotals = optionalSubjects.map((sub) => {
+    const m = getSubjectMarks(sub);
+    return (
+      m.totalMarks100 ??
+      ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0))
+    ) || 0;
+  });
+
+  const bestOptionalTotal =
+    optionalTotals.length > 0
+      ? Math.max(...optionalTotals)
+      : 0;
+
+  const grandTotalRaw = coreGrandTotalRaw + bestOptionalTotal;
 
   const formatMarks = (value) => {
     if (value === null || value === undefined || value === "") return "";
@@ -342,7 +375,7 @@ const getStudentStream = (student) => {
         <div className="remarks-block">
           <div className="block-title">Remarks</div>
           <div className="remarks-area">
-            {student?.remarks || ""}
+            {remarksText}
           </div>
         </div>
       </div>

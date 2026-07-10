@@ -8,10 +8,13 @@ function ReportCardTemplate3({
   totalPercentage,
   rank,
   academicYear,
-  stream: streamProp
+  stream: streamProp,
+  coScholastic,
+  teacherRemarks
 }) {
 
   const scholasticMarks = marks || [];
+  const coMarks = coScholastic || [];
 
   const formatMarks = (value) => {
     if (value === null || value === undefined || value === "") return "";
@@ -58,6 +61,21 @@ const getStudentStream = (student) => {
   // fallback (safe default)
 };
 
+  const getCoScholasticGrade = (areaName, term) => {
+    const mark = coMarks.find(
+      (c) => c.areaName === areaName && c.term === term
+    );
+    return mark ? mark.grade || "" : "";
+  };
+
+  const remarksText =
+    teacherRemarks ||
+    student?.remarks ||
+    getCoScholasticGrade("Class Teacher’s Remarks", 2) ||
+    getCoScholasticGrade("Class Teacher's Remarks", 2) ||
+    getCoScholasticGrade("Remarks", 2) ||
+    "";
+
   const stream = getStudentStream(student);
 
   const classNo = parseInt(student?.className);
@@ -101,7 +119,7 @@ const getStudentStream = (student) => {
 
   // totals based on final Total Marks (100)
  // ✅ FIX: Exclude optional subjects from totals
- const grandTotal = coreSubjects.reduce((sum, sub) => {
+ const coreGrandTotal = coreSubjects.reduce((sum, sub) => {
    const m = getSubjectMarks(sub);
    const total =
      m.totalMarks100 ??
@@ -109,7 +127,25 @@ const getStudentStream = (student) => {
    return sum + (total || 0);
  }, 0);
 
- const maxTotal = coreSubjects.length * 100;
+ const optionalTotals = optionalSubjects.map((sub) => {
+   const m = getSubjectMarks(sub);
+   return (
+     m.totalMarks100 ??
+     ((m.convTheory || 0) + (m.convPractical || 0) + (m.convOther || 0))
+   ) || 0;
+ });
+
+ const bestOptionalTotal =
+   (classNo === 11 || classNo === 12) && optionalTotals.length > 0
+     ? Math.max(...optionalTotals)
+     : 0;
+
+ const grandTotal = coreGrandTotal + bestOptionalTotal;
+
+ const maxTotal =
+   classNo === 11 || classNo === 12
+     ? (coreSubjects.length + 1) * 100
+     : coreSubjects.length * 100;
   const computedPercentage = maxTotal
     ? ((grandTotal / maxTotal) * 100).toFixed(2)
     : "";
@@ -141,7 +177,6 @@ const getStudentStream = (student) => {
 
         {/* Actual marks */}
         <td>{formatMarks(m.pt1Actual)}</td>
-        <td>{formatMarks(m.pt2Actual)}</td>
         <td>{formatMarks(m.halfYearlyActual)}</td>
         <td>{formatMarks(m.preBoard1Actual)}</td>
         <td>{formatMarks(m.preBoard2Actual)}</td>
@@ -149,7 +184,6 @@ const getStudentStream = (student) => {
 
         {/* Converted marks */}
         <td>{formatMarks(m.convPt1)}</td>
-        <td>{formatMarks(m.convPt2)}</td>
         <td>{formatMarks(m.convHalfYearly)}</td>
         <td>{formatMarks(m.convPreboardBest)}</td>
 
@@ -223,12 +257,12 @@ const getStudentStream = (student) => {
               </th>
 
               {/* Actual Marks block */}
-              <th colSpan="6" className="main-title">
+              <th colSpan="5" className="main-title">
                 Actual Marks
               </th>
 
               {/* Converted Marks block */}
-              <th colSpan="4" className="main-title">
+              <th colSpan="3" className="main-title">
                 Converted Marks
               </th>
 
@@ -246,7 +280,6 @@ const getStudentStream = (student) => {
             <tr>
               {/* Actual columns */}
               <th>PT-I</th>
-              <th>PT-II</th>
               <th>Half Yearly Exam</th>
               <th>Pre Board-1</th>
               <th>Pre Board-2</th>
@@ -254,21 +287,18 @@ const getStudentStream = (student) => {
 
               {/* Converted columns */}
               <th>PT-I</th>
-              <th>PT-II</th>
               <th>Half Yearly Exam</th>
               <th>Best of PB-1 &amp; PB-2</th>
             </tr>
             <tr>
               {/* Maximum marks row */}
               <th>30</th>
-              <th>30</th>
               <th>70 / 80</th>
               <th>70 / 80</th>
               <th>70 / 80</th>
               <th>30 / 20</th>
 
-              <th>5</th>
-              <th>5</th>
+              <th>10</th>
               <th>20</th>
               <th>50 / 40</th>
 
@@ -285,7 +315,7 @@ const getStudentStream = (student) => {
             {classNo !== 12 && (
               <tr className="optional-row">
                 <td className="subject-name optional-title">OPTIONAL</td>
-                <td colSpan="12"></td>
+                <td colSpan="10"></td>
               </tr>
             )}
 
@@ -295,7 +325,7 @@ const getStudentStream = (student) => {
             {/* GRAND TOTAL */}
             <tr className="total-row">
               <td className="subject-name">GRAND TOTAL</td>
-              <td colSpan="12"></td>
+              <td colSpan="10"></td>
               <td>{formatMarks(grandTotal)}</td>
             </tr>
           </tbody>
@@ -345,7 +375,7 @@ const getStudentStream = (student) => {
         <div className="remarks-block">
           <div className="block-title">Remarks</div>
           <div className="remarks-area">
-            {student?.remarks || ""}
+            {remarksText}
           </div>
         </div>
       </div>

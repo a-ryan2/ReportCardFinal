@@ -186,7 +186,8 @@ const classNumber =
       marksData =
         await fetchMarksByStudentForSeniorReportCard(
           studentId,
-          academicYear
+          academicYear,
+          classNumber
         );
 
     } else {

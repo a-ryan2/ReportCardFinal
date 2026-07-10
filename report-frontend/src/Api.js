@@ -571,7 +571,7 @@ export async function fetchMarksByStudentForReportCard(
   }
 }
 
-export async function fetchMarksByStudentForSeniorReportCard(studentId, academicYear) {
+export async function fetchMarksByStudentForSeniorReportCard(studentId, academicYear, className) {
   try {
     const res = await axios.get(
       `${API_BASE}/marks/student/${studentId}`,
@@ -582,6 +582,9 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId, academic
 
     const marksData = res.data || [];
     const subjectMap = {};
+
+    const normalizedClass = (className || "").toString().trim().toUpperCase();
+    const isBoardClass = ["10", "12", "CLASS 10", "CLASS 12"].includes(normalizedClass);
 
     const convertTheory = (obtained, total) => {
       if (total === 70) return parseFloat(((obtained / 70) * 40).toFixed(2));
@@ -632,15 +635,19 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId, academic
       if (termNumber === "1") {
         if (examType.includes("PT")) {
           subject.pt1Actual = marksObtained;
-          subject.convPt1 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
+          subject.convPt1 = parseFloat(
+            ((marksObtained / totalMarks) * (isBoardClass ? 10 : 5)).toFixed(2)
+          );
         } else if (examType.includes("HALF")) {
           subject.halfYearlyActual = marksObtained;
           subject.convHalfYearly = parseFloat(((marksObtained / totalMarks) * 20).toFixed(2));
         }
       } else if (termNumber === "2") {
         if (examType.includes("PT")) {
-          subject.pt2Actual = marksObtained;
-          subject.convPt2 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
+          if (!isBoardClass) {
+            subject.pt2Actual = marksObtained;
+            subject.convPt2 = parseFloat(((marksObtained / totalMarks) * 5).toFixed(2));
+          }
         } else if (examType.includes("HALF")) {
           subject.annualActual = marksObtained;
           subject.convAnnual = convertTheory(marksObtained, totalMarks);
@@ -651,20 +658,12 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId, academic
         subject.preBoard1Actual = marksObtained;
 
         const converted = convertTheory(marksObtained, totalMarks);
-
-        subject.convPreboardBest = Math.max(
-          subject.convPreboardBest,
-          converted
-        );
+        subject.convPreboardBest = Math.max(subject.convPreboardBest, converted);
       } else if (examType.includes("PRE") && examType.includes("2")) {
         subject.preBoard2Actual = marksObtained;
 
         const converted = convertTheory(marksObtained, totalMarks);
-
-        subject.convPreboardBest = Math.max(
-          subject.convPreboardBest,
-          converted
-        );
+        subject.convPreboardBest = Math.max(subject.convPreboardBest, converted);
       } else if (
         examType.includes("PRACTICAL") ||
         examType.includes("PROJECT") ||
@@ -673,11 +672,9 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId, academic
         subject.practicalProjectAslActual = marksObtained;
         subject.convPractical = convertPractical(marksObtained, totalMarks);
       }
-
     });
 
     Object.values(subjectMap).forEach((sub) => {
-
       const theoryMarks =
         sub.convPreboardBest > 0
           ? sub.convPreboardBest
@@ -685,17 +682,14 @@ export async function fetchMarksByStudentForSeniorReportCard(studentId, academic
 
       sub.convTheory =
         sub.convPt1 +
-        sub.convPt2 +
+        (isBoardClass ? 0 : sub.convPt2) +
         sub.convHalfYearly +
         theoryMarks;
 
-      sub.totalMarks100 =
-        sub.convTheory +
-        sub.convPractical;
+      sub.totalMarks100 = sub.convTheory + sub.convPractical;
     });
 
     return Object.values(subjectMap);
-
   } catch (error) {
     console.error("Error fetching senior marks:", error);
     return [];
