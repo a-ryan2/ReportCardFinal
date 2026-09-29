@@ -58,7 +58,7 @@ public class CoScholasticMarkService {
             existingMark.setClassTeacherRemarks(mark.getClassTeacherRemarks());
             existingMark.setGk(mark.getGk());
             existingMark.setComputer(mark.getComputer());
-            existingMark.setMoral_science(mark.getMoral_science());
+            existingMark.setMoralScience(mark.getMoralScience());
 
             return repo.save(existingMark);
         }

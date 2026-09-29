@@ -92,68 +92,64 @@ useEffect(() => {
 
 
 
- useEffect(() => {
-   async function loadStudents() {
-     setLoading(true);
+  useEffect(() => {
+    async function loadStudents() {
+      setLoading(true);
 
-     try {
+      try {
 
-       // FIRST try student table
-       const currentStudents = await fetchStudents(
-         classId,
-         sectionId,
-         academicYear
-       );
-       if (currentStudents && currentStudents.length > 0) {
+        // FIRST get students from marks table for the selected
+        // class, section and academic year
+        const marksData = await fetchHistoricalStudentsFromMarks(
+          classId,
+          sectionId,
+          academicYear
+        );
 
-         const sorted = [...currentStudents].sort(
-           (a, b) => a.rollNumber - b.rollNumber
-         );
+        const uniqueStudentsMap = {};
 
-         setStudents(sorted);
+        (marksData || []).forEach(m => {
+          if (m.student?.id) {
+            uniqueStudentsMap[m.student.id] = m.student;
+          }
+        });
 
-       } else {
+        let historicalStudents = Object.values(uniqueStudentsMap);
 
-         // FALLBACK to marks table
-         const marksData = await fetchHistoricalStudentsFromMarks(
-           classId,
-           sectionId,
-           academicYear
-         );
+        // If no historical marks exist, use the student table
+        // for students who are currently enrolled in this class/section/year
+        if (historicalStudents.length === 0) {
 
-         // extract unique students
-         const uniqueStudentsMap = {};
+          const currentStudents = await fetchStudents(
+            classId,
+            sectionId,
+            academicYear
+          );
 
-         marksData.forEach(m => {
-           if (m.student) {
-             uniqueStudentsMap[m.student.id] = m.student;
-           }
-         });
+          historicalStudents = currentStudents || [];
+        }
 
-         const historicalStudents = Object.values(uniqueStudentsMap);
+        const sorted = historicalStudents.sort(
+          (a, b) => (a.rollNumber || 0) - (b.rollNumber || 0)
+        );
 
-         const sorted = historicalStudents.sort(
-           (a, b) => (a.rollNumber || 0) - (b.rollNumber || 0)
-         );
+        setStudents(sorted);
 
-         setStudents(sorted);
-       }
+      } catch (err) {
+        console.error(err);
+        setStudents([]);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-     } catch (err) {
-       console.error(err);
-       setStudents([]);
-     } finally {
-       setLoading(false);
-     }
-   }
+    if (classId && sectionId && academicYear) {
+      loadStudents();
+    } else {
+      setStudents([]);
+    }
 
-   if (classId && sectionId && academicYear) {
-     loadStudents();
-   } else {
-     setStudents([]);
-   }
-
- }, [classId, sectionId, academicYear]);
+  }, [classId, sectionId, academicYear]);
 
   // Reset marks if subject, exam type, or term is cleared
   useEffect(() => {

@@ -1,0 +1,86 @@
+.marksheet{
+
+padding:20px;
+
+font-family:Arial,sans-serif;
+
+background:white;
+
+}
+
+.school-title{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:15px;
+
+margin-bottom:20px;
+
+}
+
+.school-title img{
+
+width:70px;
+
+}
+
+.header-row{
+
+display:flex;
+
+justify-content:space-between;
+
+margin-bottom:15px;
+
+font-weight:bold;
+
+}
+
+table{
+
+width:100%;
+
+border-collapse:collapse;
+
+font-size:12px;
+
+}
+
+table th{
+
+background:#e9e9e9;
+
+}
+
+table th,
+table td{
+
+border:1px solid black;
+
+padding:6px;
+
+text-align:center;
+
+}
+
+table td:nth-child(2){
+
+text-align:left;
+
+}
+
+@media print{
+
+@page{
+
+size:A4 landscape;
+
+margin:8mm;
+
+}
+
+}

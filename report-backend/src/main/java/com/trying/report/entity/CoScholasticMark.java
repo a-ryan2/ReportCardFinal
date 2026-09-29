@@ -48,7 +48,7 @@ public class CoScholasticMark {
 
     private String gk;
     private String computer;
-    private String moral_science;
+    private String moralScience;
 
 
 }

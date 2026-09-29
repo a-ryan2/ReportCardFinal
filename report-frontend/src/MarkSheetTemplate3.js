@@ -6,14 +6,12 @@ const SUBJECTS = [
   "ENGLISH",
   "HINDI",
   "MATHEMATICS",
-  "SCIENCE / EVS",
-  "SOCIAL SCIENCE",
-  "G.K.",
-  "COMPUTER",
-  "MORAL SCIENCE"
+  "SCIENCE",
+  "SST",
+  "COMPUTER"
 ];
 
-export default function MarksheetTemplate1({
+export default function MarkSheetTemplate3({
   students = [],
   marks = [],
   examType,
@@ -22,27 +20,16 @@ export default function MarksheetTemplate1({
 
     const getExamMark = (mark) => {
 
-      if (mark.isCoScholastic) {
-        return mark.grade ?? "";
-      }
-
       return mark.marksObtained ?? "";
     };
 
     const getSubjectMark = (studentId, subject) => {
 
-      const lookup =
-        subject === "SCIENCE / EVS"
-          ? "SCIENCE"
-          : subject === "SOCIAL SCIENCE"
-          ? "SST"
-          : subject;
-
       return (
         marks.find(
           m =>
             m.student?.id === studentId &&
-            m.subject?.name?.toUpperCase() === lookup
+            m.subject?.name?.toUpperCase() === subject
         ) || {}
       );
     };
@@ -149,17 +136,9 @@ SUBJECTS.map(subject=>{
 
 const mark=getSubjectMark(student.id,subject);
 
-const examMark=getExamMark(mark);
+const value=Number(getExamMark(mark)||0);
 
-const isCoScholastic=mark.isCoScholastic;
-
-const value=isCoScholastic
-  ? examMark
-  : Number(examMark||0);
-
-if (!isCoScholastic) {
-  total+=value;
-}
+total+=value;
 
 return(
 

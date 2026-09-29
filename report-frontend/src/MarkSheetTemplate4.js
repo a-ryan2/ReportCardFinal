@@ -2,50 +2,101 @@ import React from "react";
 import AryaVidyaMandirLogo from "./AryaVidyaMandirLogo.png";
 import "./MarkSheetTemplate.css";
 
-const SUBJECTS = [
-  "ENGLISH",
-  "HINDI",
-  "MATHEMATICS",
-  "SCIENCE / EVS",
-  "SOCIAL SCIENCE",
-  "G.K.",
-  "COMPUTER",
-  "MORAL SCIENCE"
-];
+const getSubjects = (stream) => {
 
-export default function MarksheetTemplate1({
+  if (stream === "NON-MEDICAL") {
+
+    return [
+
+      "ENGLISH",
+
+      "MATHEMATICS",
+
+      "PHYSICS",
+
+      "CHEMISTRY",
+
+      "PHY. EDU.",
+
+      "COMP. SCIENCE"
+
+    ];
+
+  }
+
+  if (stream === "COMMERCE") {
+
+    return [
+
+      "ENGLISH",
+
+      "BUSINESS STUDIES",
+
+      "ACCOUNTANCY",
+
+      "ECONOMICS",
+
+      "PHY. EDU.",
+
+      "COMP. SCIENCE"
+
+    ];
+
+  }
+
+  return [
+
+    "ENGLISH",
+
+    "PHYSICS",
+
+    "CHEMISTRY",
+
+    "BIOLOGY",
+
+    "MATHEMATICS",
+
+    "PHY. EDU.",
+
+    "COMP. SCIENCE"
+
+  ];
+
+};
+
+export default function MarkSheetTemplate4({
   students = [],
   marks = [],
   examType,
   academicYear
 }) {
 
-    const getExamMark = (mark) => {
+  const streamValue = students[0]?.stream;
 
-      if (mark.isCoScholastic) {
-        return mark.grade ?? "";
-      }
+  const stream =
+    typeof streamValue === "string"
+      ? streamValue.toUpperCase()
+      : streamValue?.name?.toUpperCase() || "";
 
-      return mark.marksObtained ?? "";
-    };
+  const SUBJECTS = getSubjects(stream);
 
-    const getSubjectMark = (studentId, subject) => {
+  const getExamMark = (mark) => {
 
-      const lookup =
-        subject === "SCIENCE / EVS"
-          ? "SCIENCE"
-          : subject === "SOCIAL SCIENCE"
-          ? "SST"
-          : subject;
+    return mark.marksObtained ?? "";
 
-      return (
-        marks.find(
-          m =>
-            m.student?.id === studentId &&
-            m.subject?.name?.toUpperCase() === lookup
-        ) || {}
-      );
-    };
+  };
+
+  const getSubjectMark = (studentId, subject) => {
+
+    return (
+      marks.find(
+        m =>
+          m.student?.id === studentId &&
+          m.subject?.name?.toUpperCase() === subject
+      ) || {}
+    );
+
+  };
 
   return (
 
@@ -149,17 +200,9 @@ SUBJECTS.map(subject=>{
 
 const mark=getSubjectMark(student.id,subject);
 
-const examMark=getExamMark(mark);
+const value=Number(getExamMark(mark)||0);
 
-const isCoScholastic=mark.isCoScholastic;
-
-const value=isCoScholastic
-  ? examMark
-  : Number(examMark||0);
-
-if (!isCoScholastic) {
-  total+=value;
-}
+total+=value;
 
 return(
 
