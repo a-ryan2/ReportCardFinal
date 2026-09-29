@@ -61,80 +61,105 @@ export default function ReportCard() {
     fetchSections().then(setSections);
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
 
-  async function loadStudents() {
+    async function loadStudents() {
 
-    if (!classId || !sectionId || !academicYear) {
-      setStudents([]);
-      return;
-    }
+      if (!classId || !sectionId || !academicYear) {
+        setStudents([]);
+        setStudentId('');
+        return;
+      }
 
-    try {
+      try {
 
-      // FIRST try current student table
-      const currentStudents = await fetchStudents(
-        classId,
-        sectionId,
-        academicYear
-      );
+        // =========================================================
+        // FIRST: GET STUDENTS FROM MARKS TABLE
+        // =========================================================
 
-      let finalStudents = [];
-
-      if (currentStudents && currentStudents.length > 0) {
-
-        finalStudents = currentStudents;
-
-      } else {
-
-        // FALLBACK to historical students from marks table
-        const historicalData =
+        const marksData =
           await fetchHistoricalStudentsFromMarks(
             classId,
             sectionId,
             academicYear
           );
 
-        // Extract unique students safely
         const uniqueStudentsMap = {};
 
-        historicalData.forEach(item => {
+        (marksData || []).forEach(item => {
 
           // Handles both cases:
-          // 1. direct student object
-          // 2. mark object containing student
+          // 1. mark object containing student
+          // 2. direct student object
 
           const student = item.student || item;
 
           if (student?.id) {
             uniqueStudentsMap[student.id] = student;
           }
+
         });
 
-        finalStudents =
+        let finalStudents =
           Object.values(uniqueStudentsMap);
+
+
+        // =========================================================
+        // SECOND: IF NO STUDENTS FOUND IN MARKS TABLE,
+        // GET STUDENTS FROM STUDENTS TABLE
+        // =========================================================
+
+        if (finalStudents.length === 0) {
+
+          const currentStudents =
+            await fetchStudents(
+              classId,
+              sectionId,
+              academicYear
+            );
+
+          finalStudents =
+            currentStudents || [];
+        }
+
+
+        // =========================================================
+        // SORT BY ROLL NUMBER
+        // =========================================================
+
+        finalStudents.sort(
+          (a, b) =>
+            (a.rollNumber || 0) -
+            (b.rollNumber || 0)
+        );
+
+        setStudents(finalStudents);
+
+        // Clear selected student if that student
+        // does not exist in the newly loaded list
+        setStudentId(prev => {
+
+          if (!prev) return '';
+
+          const exists = finalStudents.some(
+            s => s.id === parseInt(prev)
+          );
+
+          return exists ? prev : '';
+        });
+
+      } catch (err) {
+
+        console.error(err);
+
+        setStudents([]);
+        setStudentId('');
       }
-
-      // Sort by roll number
-      finalStudents.sort(
-        (a, b) =>
-          (a.rollNumber || 0) -
-          (b.rollNumber || 0)
-      );
-
-      setStudents(finalStudents);
-
-    } catch (err) {
-
-      console.error(err);
-
-      setStudents([]);
     }
-  }
 
-  loadStudents();
+    loadStudents();
 
-}, [classId, sectionId, academicYear]);
+  }, [classId, sectionId, academicYear]);
 
   const selectedClass =
     classes.find(
@@ -151,11 +176,11 @@ useEffect(() => {
       s => s.id === studentId || s.id === parseInt(studentId)
     );
 
-const studentClassName =
-  selectedClass?.name || '';
+  const studentClassName =
+    selectedClass?.name || '';
 
-const classNumber =
-  extractClassNumber(studentClassName);
+  const classNumber =
+    extractClassNumber(studentClassName);
 
   const generateReport = async () => {
 
@@ -213,265 +238,265 @@ const classNumber =
     // Calculate total marks obtained for core subjects only
 
     const calculateTotalPercentage = ({
-        student,
-        marks = [],
-        templateNumber
-      }) => {
+      student,
+      marks = [],
+      templateNumber
+    }) => {
 
-        const classNo = parseInt(student?.className);
+      const classNo = parseInt(student?.className);
 
-          // =========================================================
-          // HELPERS
-          // =========================================================
+      // =========================================================
+      // HELPERS
+      // =========================================================
 
-          const normalize = (name = "") =>
-            name.toUpperCase().trim();
+      const normalize = (name = "") =>
+        name.toUpperCase().trim();
 
-          const getTotalMarks = (m) => {
-            return (
-              m.totalMarks100 ??
-              m.total ??
-              ((m.convTheory || 0) +
-                (m.convPractical || 0) +
-                (m.convOther || 0))
-            );
-          };
+      const getTotalMarks = (m) => {
+        return (
+          m.totalMarks100 ??
+          m.total ??
+          ((m.convTheory || 0) +
+            (m.convPractical || 0) +
+            (m.convOther || 0))
+        );
+      };
 
-          const getStudentStream = () => {
-            const raw =
-              student?.stream?.name?.toString().toLowerCase() || "";
+      const getStudentStream = () => {
+        const raw =
+          student?.stream?.name?.toString().toLowerCase() || "";
 
-            if (raw.includes("non") && raw.includes("medical")) {
-              return "NON-MEDICAL";
-            }
+        if (raw.includes("non") && raw.includes("medical")) {
+          return "NON-MEDICAL";
+        }
 
-            if (raw.includes("medical")) {
-              return "MEDICAL";
-            }
+        if (raw.includes("medical")) {
+          return "MEDICAL";
+        }
 
-            if (raw.includes("commerce")) {
-              return "COMMERCE";
-            }
+        if (raw.includes("commerce")) {
+          return "COMMERCE";
+        }
 
-            return "";
-          };
+        return "";
+      };
 
-          const stream = getStudentStream();
+      const stream = getStudentStream();
 
-          // =========================================================
-          // TEMPLATE 1
-          // ALL SUBJECTS INCLUDED
-          // =========================================================
+      // =========================================================
+      // TEMPLATE 1
+      // ALL SUBJECTS INCLUDED
+      // =========================================================
 
-          if (templateNumber === 1) {
+      if (templateNumber === 1) {
 
-            const total = marks.reduce(
-              (sum, m) => sum + getTotalMarks(m),
-              0
-            );
+        const total = marks.reduce(
+          (sum, m) => sum + getTotalMarks(m),
+          0
+        );
 
-            const maxTotal = marks.length * 100;
+        const maxTotal = marks.length * 100;
 
-            return maxTotal
-              ? ((total / maxTotal) * 100).toFixed(2)
-              : "0.00";
-          }
+        return maxTotal
+          ? ((total / maxTotal) * 100).toFixed(2)
+          : "0.00";
+      }
 
-          // =========================================================
-          // TEMPLATE 2
-          // EXCLUDE OPTIONAL / CO-SCHOLASTIC SUBJECTS
-          // Used for class 9 also
-          // =========================================================
+      // =========================================================
+      // TEMPLATE 2
+      // EXCLUDE OPTIONAL / CO-SCHOLASTIC SUBJECTS
+      // Used for class 9 also
+      // =========================================================
 
-          if (templateNumber === 2) {
+      if (templateNumber === 2) {
 
-            const excludedSubjects = [
-              "G.K",
-              "GK",
-              "COMPUTER",
-              "IT",
-              "MORAL SCIENCE",
-              "OPTIONAL SUB"
-            ];
+        const excludedSubjects = [
+          "G.K",
+          "GK",
+          "COMPUTER",
+          "IT",
+          "MORAL SCIENCE",
+          "OPTIONAL SUB"
+        ];
 
-            const filteredMarks = marks.filter(
-              (m) =>
-                !excludedSubjects.includes(
-                  normalize(m.subjectName)
-                )
-            );
+        const filteredMarks = marks.filter(
+          (m) =>
+            !excludedSubjects.includes(
+              normalize(m.subjectName)
+            )
+        );
 
-            // IMPORTANT:
-            // total in template2 is T1 + T2 (out of 200)
-            // so divide by 2 to convert into final marks out of 100
+        // IMPORTANT:
+        // total in template2 is T1 + T2 (out of 200)
+        // so divide by 2 to convert into final marks out of 100
 
-            const total = filteredMarks.reduce(
-              (sum, m) =>
-                sum + ((getTotalMarks(m) || 0) / 2),
-              0
-            );
+        const total = filteredMarks.reduce(
+          (sum, m) =>
+            sum + ((getTotalMarks(m) || 0) / 2),
+          0
+        );
 
-            const maxTotal = filteredMarks.length * 100;
+        const maxTotal = filteredMarks.length * 100;
 
-            return maxTotal
-              ? ((total / maxTotal) * 100).toFixed(2)
-              : "0.00";
-          }
+        return maxTotal
+          ? ((total / maxTotal) * 100).toFixed(2)
+          : "0.00";
+      }
 
-          // =========================================================
-          // TEMPLATE 3 & 4
-          // CLASSES 10 / 11 / 12
-          // =========================================================
+      // =========================================================
+      // TEMPLATE 3 & 4
+      // CLASSES 10 / 11 / 12
+      // =========================================================
 
-          if (templateNumber === 3 || templateNumber === 4) {
+      if (templateNumber === 3 || templateNumber === 4) {
 
-            // -------------------------------------------------------
-            // CLASS 10
-            // -------------------------------------------------------
+        // -------------------------------------------------------
+        // CLASS 10
+        // -------------------------------------------------------
 
-            if (classNo === 10) {
+        if (classNo === 10) {
 
-              const coreSubjects = [
-                "ENGLISH",
-                "HINDI",
-                "MATHEMATICS",
-                "SCIENCE",
-                "SST"
-              ];
+          const coreSubjects = [
+            "ENGLISH",
+            "HINDI",
+            "MATHEMATICS",
+            "SCIENCE",
+            "SST"
+          ];
 
-              const coreMarks = marks.filter((m) =>
-                coreSubjects.includes(normalize(m.subjectName))
-              );
+          const coreMarks = marks.filter((m) =>
+            coreSubjects.includes(normalize(m.subjectName))
+          );
 
-              const total = coreMarks.reduce(
-                (sum, m) => sum + getTotalMarks(m),
-                0
-              );
+          const total = coreMarks.reduce(
+            (sum, m) => sum + getTotalMarks(m),
+            0
+          );
 
-              const maxTotal = 500;
+          const maxTotal = 500;
 
-              return ((total / maxTotal) * 100).toFixed(2);
-            }
+          return ((total / maxTotal) * 100).toFixed(2);
+        }
 
-            // -------------------------------------------------------
-            // CLASSES 11 & 12
-            // -------------------------------------------------------
+        // -------------------------------------------------------
+        // CLASSES 11 & 12
+        // -------------------------------------------------------
 
-            let coreSubjects = [];
-            let optionalSubjects = [];
+        let coreSubjects = [];
+        let optionalSubjects = [];
 
-            // NON MEDICAL
-            if (stream === "NON-MEDICAL") {
+        // NON MEDICAL
+        if (stream === "NON-MEDICAL") {
 
-              coreSubjects = [
-                "ENGLISH",
-                "MATHEMATICS",
-                "PHYSICS",
-                "CHEMISTRY"
-              ];
+          coreSubjects = [
+            "ENGLISH",
+            "MATHEMATICS",
+            "PHYSICS",
+            "CHEMISTRY"
+          ];
 
-              optionalSubjects = [
-                "PHY. EDU.",
-                "PHYSICAL EDUCATION",
-                "COMP. SCIENCE",
-                "COMPUTER SCIENCE"
-              ];
-            }
+          optionalSubjects = [
+            "PHY. EDU.",
+            "PHYSICAL EDUCATION",
+            "COMP. SCIENCE",
+            "COMPUTER SCIENCE"
+          ];
+        }
 
-            // COMMERCE
-            else if (stream === "COMMERCE") {
+        // COMMERCE
+        else if (stream === "COMMERCE") {
 
-              coreSubjects = [
-                "ENGLISH",
-                "BUSINESS STUDIES",
-                "ACCOUNTANCY",
-                "ECONOMICS"
-              ];
+          coreSubjects = [
+            "ENGLISH",
+            "BUSINESS STUDIES",
+            "ACCOUNTANCY",
+            "ECONOMICS"
+          ];
 
-              optionalSubjects = [
-                "MATHEMATICS",
-                "PHY. EDU.",
-                "PHYSICAL EDUCATION",
-                "COMP. SCIENCE",
-                "COMPUTER SCIENCE"
-              ];
-            }
+          optionalSubjects = [
+            "MATHEMATICS",
+            "PHY. EDU.",
+            "PHYSICAL EDUCATION",
+            "COMP. SCIENCE",
+            "COMPUTER SCIENCE"
+          ];
+        }
 
-            // MEDICAL
-            else {
+        // MEDICAL
+        else {
 
-              coreSubjects = [
-                "ENGLISH",
-                "PHYSICS",
-                "CHEMISTRY",
-                "BIOLOGY"
-              ];
+          coreSubjects = [
+            "ENGLISH",
+            "PHYSICS",
+            "CHEMISTRY",
+            "BIOLOGY"
+          ];
 
-              optionalSubjects = [
-                "MATHEMATICS",
-                "PHY. EDU.",
-                "PHYSICAL EDUCATION",
-                "COMP. SCIENCE",
-                "COMPUTER SCIENCE"
-              ];
-            }
+          optionalSubjects = [
+            "MATHEMATICS",
+            "PHY. EDU.",
+            "PHYSICAL EDUCATION",
+            "COMP. SCIENCE",
+            "COMPUTER SCIENCE"
+          ];
+        }
 
-            // -------------------------------------------------------
-            // GET CORE SUBJECT MARKS
-            // -------------------------------------------------------
+        // -------------------------------------------------------
+        // GET CORE SUBJECT MARKS
+        // -------------------------------------------------------
 
-            const coreMarks = marks.filter((m) =>
-              coreSubjects.includes(normalize(m.subjectName))
-            );
+        const coreMarks = marks.filter((m) =>
+          coreSubjects.includes(normalize(m.subjectName))
+        );
 
-            // -------------------------------------------------------
-            // GET OPTIONAL SUBJECT MARKS
-            // -------------------------------------------------------
+        // -------------------------------------------------------
+        // GET OPTIONAL SUBJECT MARKS
+        // -------------------------------------------------------
 
-            const optionalMarks = marks.filter((m) =>
-              optionalSubjects.includes(normalize(m.subjectName))
-            );
+        const optionalMarks = marks.filter((m) =>
+          optionalSubjects.includes(normalize(m.subjectName))
+        );
 
-            // -------------------------------------------------------
-            // TOTAL OF CORE SUBJECTS
-            // -------------------------------------------------------
+        // -------------------------------------------------------
+        // TOTAL OF CORE SUBJECTS
+        // -------------------------------------------------------
 
-            let total = coreMarks.reduce(
-              (sum, m) => sum + getTotalMarks(m),
-              0
-            );
+        let total = coreMarks.reduce(
+          (sum, m) => sum + getTotalMarks(m),
+          0
+        );
 
-            let subjectCount = coreMarks.length;
+        let subjectCount = coreMarks.length;
 
-            // -------------------------------------------------------
-            // IF ONLY 4 CORE SUBJECTS
-            // ADD HIGHEST OPTIONAL SUBJECT
-            // -------------------------------------------------------
+        // -------------------------------------------------------
+        // IF ONLY 4 CORE SUBJECTS
+        // ADD HIGHEST OPTIONAL SUBJECT
+        // -------------------------------------------------------
 
-            if (subjectCount === 4 && optionalMarks.length > 0) {
+        if (subjectCount === 4 && optionalMarks.length > 0) {
 
-              const highestOptional = Math.max(
-                ...optionalMarks.map((m) => getTotalMarks(m))
-              );
+          const highestOptional = Math.max(
+            ...optionalMarks.map((m) => getTotalMarks(m))
+          );
 
-              total += highestOptional;
+          total += highestOptional;
 
-              subjectCount += 1;
-            }
+          subjectCount += 1;
+        }
 
-            const maxTotal = subjectCount * 100;
+        const maxTotal = subjectCount * 100;
 
-            return maxTotal
-              ? ((total / maxTotal) * 100).toFixed(2)
-              : "0.00";
-          }
+        return maxTotal
+          ? ((total / maxTotal) * 100).toFixed(2)
+          : "0.00";
+      }
 
-          // =========================================================
-          // FALLBACK
-          // =========================================================
+      // =========================================================
+      // FALLBACK
+      // =========================================================
 
-          return "0.00";
-        };
+      return "0.00";
+    };
 
     const totalPercentage = calculateTotalPercentage({
       student: {
@@ -763,8 +788,6 @@ const classNumber =
     setCoScholastic(coScholasticData);
 
     setTeacherRemarks(remarksValue);
-
-
 
     setShowReport(true);
   };
