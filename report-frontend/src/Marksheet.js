@@ -29,29 +29,6 @@ const extractClassNumber = (className) => {
     return match ? Number(match[0]) : null;
 };
 
-const sameId = (a, b) => a != null && b != null && String(a) === String(b);
-
-const studentMatchesSelection = (student, classId, sectionId, academicYear) => {
-    if (!student) return false;
-
-    // Do not allow records from another academic year into this marksheet.
-    if (
-        String(student.academicYear ?? "").trim() !==
-        String(academicYear).trim()
-    ) {
-        return false;
-    }
-
-    // These checks are safeguards for APIs that return mixed class/section data.
-    const studentClassId = student.classEntity?.id ?? student.classEntityId;
-    const studentSectionId = student.section?.id ?? student.sectionId;
-
-    if (studentClassId != null && !sameId(studentClassId, classId)) return false;
-    if (studentSectionId != null && !sameId(studentSectionId, sectionId)) return false;
-
-    return true;
-};
-
 const sortStudentsByRollNumber = (list) =>
     [...list].sort((a, b) => {
         const rollA = Number(a.rollNumber);
@@ -89,14 +66,16 @@ export default function Marksheet() {
         }
 
         try {
-            const data = await fetchMarksByClassSection(classId, sectionId, academicYear);
-
-            // Filter marks by selected academic year/class/section as an additional safeguard.
-            const yearScopedMarks = (data || []).filter((mark) =>
-                studentMatchesSelection(mark.student, classId, sectionId, academicYear)
+            const data = await fetchMarksByClassSection(
+                classId,
+                sectionId,
+                academicYear
             );
 
-            const filteredMarks = yearScopedMarks.filter((m) => {
+            // The API request is scoped to the selected class, section, and academic year.
+            // Do not filter using student.academicYear, because historical student records
+            // may not contain the selected academic year on the linked student object.
+            const filteredMarks = (data || []).filter((m) => {
                 const name = m.examType?.name?.toUpperCase().trim() || "";
                 const term = m.term?.name?.toUpperCase().trim() ||
                     m.term?.toUpperCase().trim() || "";
@@ -123,40 +102,38 @@ export default function Marksheet() {
 
             const combinedMarks = [...filteredMarks];
 
-            (coScholasticData || [])
-                .filter((co) => studentMatchesSelection(
-                    co.student, classId, sectionId, academicYear
-                ))
-                .forEach((co) => {
-                    const studentId = co.student?.id;
-                    if (!studentId) return;
+            // The co-scholastic API is also requested for the selected class,
+            // section, term, and academic year.
+            (coScholasticData || []).forEach((co) => {
+                const studentId = co.student?.id;
+                if (!studentId) return;
 
-                    const coSubjects = [
-                        { name: "G.K.", value: co.gk },
-                        { name: "COMPUTER", value: co.computer },
-                        { name: "MORAL SCIENCE", value: co.moralScience }
-                    ];
+                const coSubjects = [
+                    { name: "G.K.", value: co.gk },
+                    { name: "COMPUTER", value: co.computer },
+                    { name: "MORAL SCIENCE", value: co.moralScience }
+                ];
 
-                    coSubjects.forEach(({ name, value }) => {
-                        if (value === null || value === undefined || value === "") return;
+                coSubjects.forEach(({ name, value }) => {
+                    if (value === null || value === undefined || value === "") return;
 
-                        const scholasticExists = filteredMarks.some(
-                            (m) => m.student?.id === studentId &&
-                                m.subject?.name?.toUpperCase() === name
-                        );
+                    const scholasticExists = filteredMarks.some(
+                        (m) => String(m.student?.id) === String(studentId) &&
+                            m.subject?.name?.toUpperCase().trim() === name
+                    );
 
-                        if (!scholasticExists) {
-                            combinedMarks.push({
-                                student: co.student,
-                                subject: { name },
-                                grade: value,
-                                isCoScholastic: true
-                            });
-                        }
-                    });
+                    if (!scholasticExists) {
+                        combinedMarks.push({
+                            student: co.student,
+                            subject: { name },
+                            grade: value,
+                            isCoScholastic: true
+                        });
+                    }
                 });
+            });
 
-            // Fetch historical students first, following the Report Card implementation.
+            // Load historical students the same way as Marks.js.
             const historicalData = await fetchHistoricalStudentsFromMarks(
                 classId, sectionId, academicYear
             );
@@ -165,39 +142,37 @@ export default function Marksheet() {
 
             (historicalData || []).forEach((item) => {
                 const student = item.student || item;
-                if (
-                    student?.id &&
-                    studentMatchesSelection(student, classId, sectionId, academicYear)
-                ) {
+
+                if (student?.id) {
                     historicalStudentsById[student.id] = student;
                 }
             });
 
             let finalStudents = Object.values(historicalStudentsById);
 
-            // Fall back to the Students table only when no eligible historical students are found.
+            // Fall back to the Students table only when no historical students are found.
             if (finalStudents.length === 0) {
                 const currentStudents = await fetchStudents(
                     classId, sectionId, academicYear
                 );
 
-                finalStudents = (currentStudents || []).filter((student) =>
-                    studentMatchesSelection(student, classId, sectionId, academicYear)
-                );
+                finalStudents = currentStudents || [];
             }
 
             const studentsById = {};
 
             finalStudents.forEach((student) => {
-                studentsById[student.id] = student;
+                if (student?.id) {
+                    studentsById[student.id] = student;
+                }
             });
 
+            // Include students present in the selected exam's marks.
+            // Preserve historical student records when the same student is already loaded.
             combinedMarks.forEach((mark) => {
                 const student = mark.student;
-                if (
-                    student?.id &&
-                    studentMatchesSelection(student, classId, sectionId, academicYear)
-                ) {
+
+                if (student?.id && !studentsById[student.id]) {
                     studentsById[student.id] = student;
                 }
             });
