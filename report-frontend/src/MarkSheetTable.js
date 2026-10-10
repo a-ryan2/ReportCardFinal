@@ -1,3 +1,4 @@
+
 import React from "react";
 import AryaVidyaMandirLogo from "./AryaVidyaMandirLogo.png";
 import "./MarkSheetTemplate.css";
@@ -14,6 +15,15 @@ const getMarkValue = (mark) => {
 };
 
 const normalizeSubject = (subject) => subject.toUpperCase().trim();
+
+const getDisplaySubjectName = (subject) => {
+    const normalized = normalizeSubject(subject);
+
+    if (normalized === "MATHEMATICS") return "MATHS";
+    if (normalized === "COMPUTER") return "COMP";
+
+    return subject;
+};
 
 export default function MarkSheetTable({
     students = [],
@@ -103,7 +113,7 @@ export default function MarkSheetTable({
                         <th>Father's Name</th>
                         {subjects.map((subject) => (
                             <th key={subject}>
-                                <div>{subject}</div>
+                                <div>{getDisplaySubjectName(subject)}</div>
                                 <small>(Max: {getSubjectMax(subject) || "—"})</small>
                             </th>
                         ))}
@@ -140,6 +150,33 @@ export default function MarkSheetTable({
                             </tr>
                         );
                     })}
+                    <tr>
+                        <td colSpan={4}><b>Average</b></td>
+                        {subjects.map((subject) => {
+                            const values = students
+                                .map((student) => {
+                                    const mark = getSubjectMark(student.id, subject);
+                                    if (!mark || mark.isCoScholastic) return null;
+                                    const value = mark.marksObtained;
+                                    if (value === null || value === undefined || value === "") return null;
+                                    const numeric = Number(value);
+                                    return Number.isFinite(numeric) ? numeric : null;
+                                })
+                                .filter((value) => value !== null);
+
+                            const average = values.length
+                                ? values.reduce((sum, value) => sum + value, 0) / values.length
+                                : null;
+
+                            return (
+                                <td key={subject}>
+                                    <b>{average === null ? "—" : average.toFixed(2)}</b>
+                                </td>
+                            );
+                        })}
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
                 </tbody>
             </table>
         </div>

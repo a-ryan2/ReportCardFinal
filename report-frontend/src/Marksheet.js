@@ -4,6 +4,8 @@ import Dropdown from "./Dropdown";
 import {
     fetchClasses,
     fetchSections,
+    fetchStudents,
+    fetchHistoricalStudentsFromMarks,
     fetchMarksByClassSection,
     fetchCoScholasticMarksByClassSectionTerm
 } from "./Api";
@@ -154,16 +156,51 @@ export default function Marksheet() {
                     });
                 });
 
-            const studentsById = combinedMarks.reduce((acc, mark) => {
+            // Fetch historical students first, following the Report Card implementation.
+            const historicalData = await fetchHistoricalStudentsFromMarks(
+                classId, sectionId, academicYear
+            );
+
+            const historicalStudentsById = {};
+
+            (historicalData || []).forEach((item) => {
+                const student = item.student || item;
+                if (
+                    student?.id &&
+                    studentMatchesSelection(student, classId, sectionId, academicYear)
+                ) {
+                    historicalStudentsById[student.id] = student;
+                }
+            });
+
+            let finalStudents = Object.values(historicalStudentsById);
+
+            // Fall back to the Students table only when no eligible historical students are found.
+            if (finalStudents.length === 0) {
+                const currentStudents = await fetchStudents(
+                    classId, sectionId, academicYear
+                );
+
+                finalStudents = (currentStudents || []).filter((student) =>
+                    studentMatchesSelection(student, classId, sectionId, academicYear)
+                );
+            }
+
+            const studentsById = {};
+
+            finalStudents.forEach((student) => {
+                studentsById[student.id] = student;
+            });
+
+            combinedMarks.forEach((mark) => {
                 const student = mark.student;
                 if (
                     student?.id &&
                     studentMatchesSelection(student, classId, sectionId, academicYear)
                 ) {
-                    acc[student.id] = student;
+                    studentsById[student.id] = student;
                 }
-                return acc;
-            }, {});
+            });
 
             setStudents(sortStudentsByRollNumber(Object.values(studentsById)));
             setMarks(combinedMarks);
