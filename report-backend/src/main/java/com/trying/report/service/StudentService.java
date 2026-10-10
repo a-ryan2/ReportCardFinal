@@ -7,6 +7,8 @@ import com.trying.report.entity.Student;
 import com.trying.report.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -25,16 +27,46 @@ public class StudentService {
     private StreamService streamService;
 
     public List<Student> findByClassAndSection(Long classId, Long sectionId, String academicYear) {
-        return studentRepository.findByClassEntityIdAndSectionIdAndAcademicYear(classId, sectionId, academicYear);
+        List<Student> students =
+                studentRepository.findByClassEntityIdAndSectionIdAndAcademicYear(
+                        classId, sectionId, academicYear
+                );
+
+        students.sort(
+                java.util.Comparator.comparingInt(
+                        student -> Integer.parseInt(student.getRollNumber())
+                )
+        );
+
+        return students;
     }
 
     public List<Student> findByClassSectionAndStream(Long classId, Long sectionId, Long streamId, String academicYear) {
-        return studentRepository.findByClassEntityIdAndSectionIdAndStreamIdAndAcademicYear(classId, sectionId, streamId, academicYear);
-    }
+        List<Student> students =
+                studentRepository
+                        .findByClassEntityIdAndSectionIdAndStreamIdAndAcademicYear(
+                                classId, sectionId, streamId, academicYear
+                        );
+
+        students.sort(
+                java.util.Comparator.comparingInt(
+                        student -> Integer.parseInt(student.getRollNumber())
+                )
+        );
+
+        return students;    }
 
     public List<Student> findAll() {
-        return studentRepository.findAll();
-    }
+
+        List<Student> students = studentRepository.findAll();
+
+        students.sort(
+                Comparator.comparingInt(
+                        student -> Integer.parseInt(student.getRollNumber())
+                )
+        );
+
+        return students;    }
 
     public Student save(Student student) {
         // Validate mandatory fields
@@ -66,17 +98,31 @@ public class StudentService {
             throw new IllegalArgumentException("Admission Number already exists.");
         }
 
-        boolean rollExists = studentRepository.existsByClassEntityIdAndSectionIdAndRollNumber(
-                student.getClassEntity().getId(),
-                student.getSection().getId(),
-                student.getRollNumber()
-        );
+
+        boolean rollExists =
+                studentRepository
+                        .existsByClassEntityIdAndSectionIdAndRollNumberAndAcademicYear(
+                                student.getClassEntity().getId(),
+                                student.getSection().getId(),
+                                student.getRollNumber(),
+                                student.getAcademicYear()
+                        );
 
         if (rollExists && (student.getId() == null ||
                 !studentRepository.findById(student.getId())
-                        .map(s -> s.getRollNumber().equals(student.getRollNumber()))
+                        .map(s ->
+                                s.getRollNumber().equals(student.getRollNumber()) &&
+                                        s.getClassEntity().getId().equals(
+                                                student.getClassEntity().getId()) &&
+                                        s.getSection().getId().equals(
+                                                student.getSection().getId()) &&
+                                        s.getAcademicYear().equals(
+                                                student.getAcademicYear()))
                         .orElse(false))) {
-            throw new IllegalArgumentException("Roll number already exists in this class and section.");
+
+            throw new IllegalArgumentException(
+                    "Roll number already exists in this class, section and academic year."
+            );
         }
 
         return studentRepository.save(student);

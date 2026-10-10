@@ -14,7 +14,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     // ✅ New (optional stream filter)
     List<Student> findByClassEntityIdAndSectionIdAndStreamIdAndAcademicYear(Long classId, Long sectionId, Long streamId, String academicYear);
 
-    boolean existsByClassEntityIdAndSectionIdAndRollNumber(Long classId, Long sectionId, String rollNumber);
+    boolean existsByClassEntityIdAndSectionIdAndRollNumberAndAcademicYear(
+            Long classId,
+            Long sectionId,
+            String rollNumber,
+            String academicYear
+    );
 
     boolean existsBySrn(String srn);
 

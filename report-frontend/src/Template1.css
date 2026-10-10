@@ -96,6 +96,12 @@ th, td {
   font-size: 9.5px;
 }
 
+.scholastic-table tbody td {
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 15px;
+}
+
 /* ===== CO-SCHOLASTIC TABLE ===== */
 .coscholastic-table {
   margin-bottom: 8px;
@@ -174,11 +180,13 @@ th, td {
   letter-spacing: 1px;
   font-family: 'Georgia', serif;
   gap: 10px;
+  margin-bottom: 8px;
+  line-height: 1;
 }
 
 
 .school-logo {
-  height: 75px;
+  height: 65px;
   width: auto;
   object-fit: contain;
 }
